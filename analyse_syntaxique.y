@@ -13,6 +13,7 @@ n_programme* arbre_abstrait;
 
 %union {
     int entier;
+    int booleen;
     n_programme* prog;
     n_l_instructions* l_inst;
     n_instruction* inst;
@@ -22,17 +23,52 @@ n_programme* arbre_abstrait;
 
 %define parse.error verbose
 %define parse.lac full
+
 //Symboles terminaux qui seront fournis par yylex(), ordre non important
 
-%token IDENTIFIANT
+%token TYPE_ENTIER
+%token TYPE_BOOLEEN
+
+%token AFFECTATION
+
 %token PLUS
+%token MOINS
 %token FOIS
+%token DIVISION
+%token MODULO
+
+%token EGALITE
+%token DIFFERENCE
+%token INFERIEUR_STRICT
+%token SUPERIEUR_STRICT
+%token INFERIEUR_LARGE
+%token SUPERIEUR_LARGE
+
+%token ET
+%token OU
+%token NON
+
+%token SI
+%token SINON
+%token TANT_QUE
+%token RETOURNER
+
+%token ECRIRE
+%token LIRE
+
+%token VIRGULE
+%token POINT_VIRGULE
 %token PARENTHESE_OUVRANTE
 %token PARENTHESE_FERMANTE
-%token POINT_VIRGULE
+%token ACCOLADE_OUVRANTE
+%token ACCOLADE_FERMANTE
+
 %token <entier> ENTIER
-%token ECRIRE
+%token <booleen> BOOLEEN
+%token IDENTIFIANT
+
 %token FIN 0
+
 
 //Symboles non terminaux
 
@@ -82,11 +118,9 @@ expr: ENTIER {
 }
 
 
-
 %%
 
 int yyerror(const char *s) {
     printf("yyerror : %s\n",s);
     return 0;
 }
-
