@@ -1,4 +1,6 @@
-# Analyseur lexical du compilateur L en FLEX
+/* 
+ * Analyseur lexical du compilateur L en FLEX 
+ */
 
 %{
 #include "arbre_abstrait.h"
@@ -8,7 +10,7 @@
 %option nounput
 %option noinput
 
-
+%%
 "entier"              {return TYPE_ENTIER;}
 "booleen"             {return TYPE_BOOLEEN;}
 
@@ -47,7 +49,7 @@
 "}"                   {return ACCOLADE_FERMANTE;}
 
 ([1-9][0-9]*|0)       {yylval.entier=atoi(yytext); return ENTIER;}
-"Vrai"|"Faux"         {yyval.booleen=!strcmp(yytext, "Vrai"); return BOOLEEN;}
+"Vrai"|"Faux"         {yylval.booleen=!strcmp(yytext, "Vrai"); return BOOLEEN;}
 [a-zA-Z][a-zA-Z0-9]*  {return IDENTIFIANT;}
 [ \t\r\n]             {}
 "#".*                 {}
@@ -62,9 +64,9 @@ int yywrap(){
 }
 
 
-# ****************************************************************************
-# Fonction auxiliaire qui donne le nom des différents tokens
-# ****************************************************************************
+/*
+ * Fonction auxiliaire qui donne le nom des différents tokens
+ */
 
 int token_fermes[] = 
 {
@@ -80,6 +82,18 @@ int token_fermes[] =
 
 char *str_token[] = 
 {
+  "TYPE_ENTIER", "TYPE_BOOLEEN", 
+  "AFFECTATION", 
+  "PLUS", "MOINS", "FOIS", "DIVISION", "MODULO", 
+  "EGALITE", "DIFFERENCE", "INFERIEUR_STRICT", "SUPERIEUR_STRICT", "INFERIEUR_LARGE", "SUPERIEUR_LARGE", 
+  "ET", "OU", "NON", 
+  "SI", "SINON", "TANT_QUE", "RETOURNER", 
+  "ECRIRE", "LIRE", 
+  "VIRGULE", "POINT_VIRGULE", "PARENTHESE_OUVRANTE", "PARENTHESE_FERMANTE", "ACCOLADE_OUVRANTE", "ACCOLADE_FERMANTE"
+};
+
+char *str_value[] = 
+{
   "entier", "booleen", 
   "=", 
   "+", "-", "*", "/", "%", 
@@ -91,7 +105,7 @@ char *str_token[] =
 };
 
 
-int nbMotsClefs = 6;
+int nbMotsClefs = 29;
 
 void nom_token(int token, char *nom, char *valeur)
 {   
@@ -99,8 +113,8 @@ void nom_token(int token, char *nom, char *valeur)
   {
   	if (token == token_fermes[i])
     {
-  	  strcpy(nom, "symbole");
-  	  strcpy(valeur, str_token[i]);
+  	  strcpy(nom, str_token[i]);
+  	  strcpy(valeur, "");
   	  return;
   	}
   }
@@ -123,9 +137,11 @@ void nom_token(int token, char *nom, char *valeur)
 }
 
 
-# Fonction auxiliaire appelée par le compilateur en mode -l pour tester l'analyse
-# lexicale. Le fichier source doit être indiqué dans la variable globale yyin.
-# Cette fonction imprime le résultat de l'analyse lexicale sur la sortie standard.
+/* 
+ * Fonction auxiliaire appelée par le compilateur en mode -l pour tester l'analyse
+ * lexicale. Le fichier source doit être indiqué dans la variable globale yyin.
+ * Cette fonction imprime le résultat de l'analyse lexicale sur la sortie standard.
+ */
 void afficher_analyse_lexicale() 
 {
   int uniteCourante;

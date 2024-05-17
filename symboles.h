@@ -50,14 +50,38 @@ extern int yydebug;
   enum yytokentype
   {
     FIN = 0,
-    IDENTIFIANT = 258,
-    PLUS = 259,
-    FOIS = 260,
-    PARENTHESE_OUVRANTE = 261,
-    PARENTHESE_FERMANTE = 262,
-    POINT_VIRGULE = 263,
-    ENTIER = 264,
-    ECRIRE = 265
+    TYPE_ENTIER = 258,
+    TYPE_BOOLEEN = 259,
+    AFFECTATION = 260,
+    PLUS = 261,
+    MOINS = 262,
+    FOIS = 263,
+    DIVISION = 264,
+    MODULO = 265,
+    EGALITE = 266,
+    DIFFERENCE = 267,
+    INFERIEUR_STRICT = 268,
+    SUPERIEUR_STRICT = 269,
+    INFERIEUR_LARGE = 270,
+    SUPERIEUR_LARGE = 271,
+    ET = 272,
+    OU = 273,
+    NON = 274,
+    SI = 275,
+    SINON = 276,
+    TANT_QUE = 277,
+    RETOURNER = 278,
+    ECRIRE = 279,
+    LIRE = 280,
+    VIRGULE = 281,
+    POINT_VIRGULE = 282,
+    PARENTHESE_OUVRANTE = 283,
+    PARENTHESE_FERMANTE = 284,
+    ACCOLADE_OUVRANTE = 285,
+    ACCOLADE_FERMANTE = 286,
+    ENTIER = 287,
+    BOOLEEN = 288,
+    IDENTIFIANT = 289
   };
 #endif
 
@@ -68,12 +92,13 @@ union YYSTYPE
 #line 14 "analyse_syntaxique.y"
 
     int entier;
+    int booleen;
     n_programme* prog;
     n_l_instructions* l_inst;
     n_instruction* inst;
     n_exp* exp;
 
-#line 77 "symboles.h"
+#line 102 "symboles.h"
 
 };
 typedef union YYSTYPE YYSTYPE;
