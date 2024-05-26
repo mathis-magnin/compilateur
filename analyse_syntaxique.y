@@ -81,40 +81,99 @@ n_programme* arbre_abstrait;
 %%
 
 prog: listeInstructions {
-arbre_abstrait =creer_n_programme($1);
-} 
+    arbre_abstrait = creer_n_programme($1);
+}
 
 listeInstructions: instruction {
-$$ =creer_n_l_instructions($1 ,NULL);
+    $$ = creer_n_l_instructions($1 ,NULL);
 } 
 
 listeInstructions: instruction listeInstructions {
-$$ =creer_n_l_instructions($1 ,$2);
+    $$ = creer_n_l_instructions($1 ,$2);
 } 
 
 instruction: ecrire {
-	$$ =$1;
+	$$ = $1;
 }
 
 ecrire: ECRIRE PARENTHESE_OUVRANTE expr PARENTHESE_FERMANTE POINT_VIRGULE {
-	
-	$$ =creer_n_ecrire($3);
+	$$ = creer_n_ecrire($3);
 }
 
-expr: expr PLUS expr{
-	$$ =creer_n_operation('+', $1, $3);
+
+// Expressions
+
+
+expr: entier {
+    $$ = $1
 }
 
-expr: expr FOIS expr{
-	$$ =creer_n_operation('*', $1 , $3);
+expr: booleen {
+    $$ = $1
 }
 
-expr: PARENTHESE_OUVRANTE expr PARENTHESE_FERMANTE {
-	$$ =$2 ;
+// Expressions entières
+
+entier: entier PLUS entier {
+	$$ = creer_n_operation('+', $1, $3);
 }
+
+entier: entier FOIS entier {
+	$$ = creer_n_operation('*', $1 , $3);
+}
+
+entier: PARENTHESE_OUVRANTE entier PARENTHESE_FERMANTE {
+	$$ = $2;
+}
+
+// Expressions booléennes
+
+boolen: PARENTHESE_OUVRANTE boolen PARENTHESE_FERMANTE {
+	$$ = $2;
+}
+
+boolen: BOOLEEN {
+    $$ = $1;
+}
+
+booleen: IDENTIFIANT {
+    $$ = 
+}
+
+booleen: disjonction {
+    $$ = $1;
+}
+
+disjonction: disjonction OU conjonction {
+    $$ = creer_n_operation('|', $1 , $3);
+}
+
+disjonction: conjonction {
+    $$ = $1;
+}
+
+conjonction: conjonction ET negation {
+    $$ = creer_n_operation('&', $1 , $3);
+}
+
+conjonction: negation {
+    $$ = $1;
+}
+
+negation: NON booleen {
+    $$ = creer_n_operation('!', $2, NULL);
+}
+
+
+// Valeurs
+
 
 expr: ENTIER {
 	$$ = creer_n_entier($1);
+}
+
+expr: BOOLEEN {
+    $$ = creer_n_entier($1);
 }
 
 
