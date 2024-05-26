@@ -1,0 +1,14 @@
+booleen inutile(entier entier1, entier entier2) {
+    entier3 = entier1 + entier2;
+    booleen bool = Faux;
+    si (entier1 == entier3) {
+        tantque(bool != Vrai) {
+            si(entier1 % entier2 >= entier3 et non(bool == Vrai)) {
+                entier2 = entier2 / entier3;
+                bool = Vrai;
+            }
+        }
+        lire(bool);
+    }
+    retourner(bool);
+}
