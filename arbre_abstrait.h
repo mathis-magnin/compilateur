@@ -52,6 +52,28 @@ struct n_exp
   } u;
 };
 
+typedef enum
+{
+  i_plus,
+  i_moins,
+  i_fois,
+  i_division,
+  i_modulo,
+
+  i_egalite,
+  i_difference,
+  i_inferieur_strict,
+  i_superieur_strict,
+  i_inferieur_large,
+  i_superieur_large,
+
+  i_ou,
+  i_et,
+  i_non
+} type_op;
+
+static const char type_op_value[] = {'+', '-', '*', '/', '%', 'e', 'd', '<', '>', 'i', 's', '|', '&', '!'};
+
 struct n_operation
 {
   char type_operation;

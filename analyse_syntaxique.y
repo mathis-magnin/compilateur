@@ -77,11 +77,21 @@ n_programme* arbre_abstrait;
 %type <inst> instruction
 %type <inst> ecrire
 
+
 %type <exp> expr
+
 %type <exp> entier
+%type <exp> op_prio_0
 %type <exp> somme
+%type <exp> soustraction
+%type <exp> op_prio_1
 %type <exp> produit
+%type <exp> quotient
+%type <exp> reste
+%type <exp> op_prio_2
+%type <exp> opposition
 %type <exp> facteur
+
 %type <exp> booleen
 %type <exp> disjonction
 %type <exp> conjonction
@@ -124,25 +134,77 @@ expr: booleen {
 
 // 1. Expressions entières
 
-entier: somme {
+entier: op_prio_0 {
     $$ = $1;
 }
 
-somme: somme PLUS produit {
-	$$ = creer_n_operation('+', $1, $3);
-}
+// a. Opérations de priorité 0
 
-somme: produit {
+op_prio_0: somme {
     $$ = $1;
 }
 
-produit: produit FOIS facteur {
-	$$ = creer_n_operation('*', $1 , $3);
-}
-
-produit: facteur {
+op_prio_0: soustraction {
     $$ = $1;
 }
+
+op_prio_0: op_prio_1 {
+    $$ = $1;
+}
+
+somme: op_prio_0 PLUS op_prio_1 {
+	$$ = creer_n_operation(type_op_value[i_plus], $1, $3);
+}
+
+soustraction: op_prio_0 MOINS op_prio_1 {
+	$$ = creer_n_operation(type_op_value[i_moins], $1, $3);
+}
+
+// b. Opérations de priorité 1
+
+op_prio_1: produit {
+    $$ = $1;
+}
+
+op_prio_1: quotient {
+    $$ = $1;
+}
+
+op_prio_1: reste {
+    $$ = $1;
+}
+
+op_prio_1: op_prio_2 {
+    $$ = $1;
+}
+
+produit: op_prio_1 FOIS op_prio_2 {
+	$$ = creer_n_operation(type_op_value[i_fois], $1 , $3);
+}
+
+quotient: op_prio_1 DIVISION op_prio_2 {
+	$$ = creer_n_operation(type_op_value[i_division], $1 , $3);
+}
+
+reste: op_prio_1 MODULO op_prio_2 {
+	$$ = creer_n_operation(type_op_value[i_modulo], $1 , $3);
+}
+
+// c. Opérations de priorité 2
+
+op_prio_2: opposition {
+    $$ = $1;
+}
+
+op_prio_2: facteur {
+    $$ = $1;
+}
+
+opposition: MOINS facteur {
+	$$ = creer_n_operation(type_op_value[i_fois], creer_n_entier(-1), $2);
+}
+
+// d. Composants de base de l'opération
 
 facteur: ENTIER {
     $$ = creer_n_entier($1);
@@ -157,27 +219,27 @@ facteur: PARENTHESE_OUVRANTE entier PARENTHESE_FERMANTE {
 // a. Comparaisons d'entiers
 
 booleen: entier EGALITE entier {
-    $$ = creer_n_operation('↔', $1, $3);
+    $$ = creer_n_operation(type_op_value[i_egalite], $1, $3);
 }
 
 booleen: entier DIFFERENCE entier {
-    $$ = creer_n_operation('≠', $1, $3);
+    $$ = creer_n_operation(type_op_value[i_difference], $1, $3);
 }
 
 booleen: entier INFERIEUR_LARGE entier {
-    $$ = creer_n_operation('≤', $1, $3);
+    $$ = creer_n_operation(type_op_value[i_inferieur_large], $1, $3);
 }
 
 booleen: entier INFERIEUR_STRICT entier {
-    $$ = creer_n_operation('<', $1, $3);
+    $$ = creer_n_operation(type_op_value[i_inferieur_strict], $1, $3);
 }
 
 booleen: entier SUPERIEUR_LARGE entier {
-    $$ = creer_n_operation('≥', $1, $3);
+    $$ = creer_n_operation(type_op_value[i_superieur_large], $1, $3);
 }
 
 booleen: entier SUPERIEUR_STRICT entier {
-    $$ = creer_n_operation('>', $1, $3);
+    $$ = creer_n_operation(type_op_value[i_superieur_strict], $1, $3);
 }
 
 // b. Opérations booléennnes
@@ -187,7 +249,7 @@ booleen: disjonction {
 }
 
 disjonction: disjonction OU conjonction {
-    $$ = creer_n_operation('|', $1 , $3);
+    $$ = creer_n_operation(type_op_value[i_ou], $1 , $3);
 }
 
 disjonction: conjonction {
@@ -195,7 +257,7 @@ disjonction: conjonction {
 }
 
 conjonction: conjonction ET negation {
-    $$ = creer_n_operation('&', $1 , $3);
+    $$ = creer_n_operation(type_op_value[i_et], $1 , $3);
 }
 
 conjonction: negation {
@@ -203,7 +265,7 @@ conjonction: negation {
 }
 
 negation: NON atome {
-    $$ = creer_n_operation('!', $2, NULL);
+    $$ = creer_n_operation(type_op_value[i_non], $2, NULL);
 }
 
 negation: atome {
