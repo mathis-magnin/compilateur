@@ -1,0 +1,3 @@
+ecrire(Vrai et Faux);
+ecrire(3 + 4 < 5 * 8 + 6);
+ecrire(3 * 5 != 2);

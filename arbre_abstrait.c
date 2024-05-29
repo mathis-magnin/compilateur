@@ -36,7 +36,16 @@ void afficher_entier(int valeur, int indent)
 	{
 		printf(" ");
 	}
-	printf("[Entier:%d]\n", valeur);
+	printf("[Entier: %d]\n", valeur);
+}
+
+void afficher_booleen(int valeur, int indent)
+{
+	for (int i = 0; i < indent; i++)
+	{
+		printf(" ");
+	}
+	printf("[Booléen: %s]\n", (valeur == 1) ? "Vrai" : "Faux");
 }
 
 void afficher_n_programme(n_programme *prog, int indent)
@@ -81,14 +90,21 @@ void afficher_n_exp(n_exp *exp, int indent)
 	{
 		afficher_entier(exp->u.valeur, indent);
 	}
+	else if (exp->type_exp == i_booleen)
+	{
+		afficher_booleen(exp->u.valeur, indent);
+	}
 }
 
 void afficher_n_operation(n_operation *operation, int indent)
 {
 	afficher("<operation>", indent);
-	afficher_caractere(operation->type_operation, indent + 1);
 	afficher_n_exp(operation->exp1, indent + 1);
-	afficher_n_exp(operation->exp2, indent + 1);
+	afficher_caractere(operation->type_operation, indent + 1);
+	if (operation->exp2 != NULL)
+	{
+		afficher_n_exp(operation->exp2, indent + 1);
+	}
 	afficher("</operation>", indent);
 }
 
@@ -119,6 +135,14 @@ n_exp *creer_n_entier(int valeur)
 {
 	n_exp *n = malloc(sizeof(n_exp));
 	n->type_exp = i_entier;
+	n->u.valeur = valeur;
+	return n;
+}
+
+n_exp *creer_n_booleen(int valeur)
+{
+	n_exp *n = malloc(sizeof(n_exp));
+	n->type_exp = i_booleen;
 	n->u.valeur = valeur;
 	return n;
 }

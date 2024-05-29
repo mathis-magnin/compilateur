@@ -76,7 +76,17 @@ n_programme* arbre_abstrait;
 %type <l_inst> listeInstructions
 %type <inst> instruction
 %type <inst> ecrire
-%type <exp> expr 
+
+%type <exp> expr
+%type <exp> entier
+%type <exp> somme
+%type <exp> produit
+%type <exp> facteur
+%type <exp> booleen
+%type <exp> disjonction
+%type <exp> conjonction
+%type <exp> negation
+%type <exp> atome
 
 %%
 
@@ -85,11 +95,11 @@ prog: listeInstructions {
 }
 
 listeInstructions: instruction {
-    $$ = creer_n_l_instructions($1 ,NULL);
+    $$ = creer_n_l_instructions($1, NULL);
 } 
 
 listeInstructions: instruction listeInstructions {
-    $$ = creer_n_l_instructions($1 ,$2);
+    $$ = creer_n_l_instructions($1, $2);
 } 
 
 instruction: ecrire {
@@ -105,40 +115,72 @@ ecrire: ECRIRE PARENTHESE_OUVRANTE expr PARENTHESE_FERMANTE POINT_VIRGULE {
 
 
 expr: entier {
-    $$ = $1
-}
-
-expr: booleen {
-    $$ = $1
-}
-
-// Expressions entières
-
-entier: entier PLUS entier {
-	$$ = creer_n_operation('+', $1, $3);
-}
-
-entier: entier FOIS entier {
-	$$ = creer_n_operation('*', $1 , $3);
-}
-
-entier: PARENTHESE_OUVRANTE entier PARENTHESE_FERMANTE {
-	$$ = $2;
-}
-
-// Expressions booléennes
-
-boolen: PARENTHESE_OUVRANTE boolen PARENTHESE_FERMANTE {
-	$$ = $2;
-}
-
-boolen: BOOLEEN {
     $$ = $1;
 }
 
-booleen: IDENTIFIANT {
-    $$ = 
+expr: booleen {
+    $$ = $1;
 }
+
+// 1. Expressions entières
+
+entier: somme {
+    $$ = $1;
+}
+
+somme: somme PLUS produit {
+	$$ = creer_n_operation('+', $1, $3);
+}
+
+somme: produit {
+    $$ = $1;
+}
+
+produit: produit FOIS facteur {
+	$$ = creer_n_operation('*', $1 , $3);
+}
+
+produit: facteur {
+    $$ = $1;
+}
+
+facteur: ENTIER {
+    $$ = creer_n_entier($1);
+}
+
+facteur: PARENTHESE_OUVRANTE entier PARENTHESE_FERMANTE {
+	$$ = $2;
+}
+
+// 2. Expressions booléennes
+
+// a. Comparaisons d'entiers
+
+booleen: entier EGALITE entier {
+    $$ = creer_n_operation('↔', $1, $3);
+}
+
+booleen: entier DIFFERENCE entier {
+    $$ = creer_n_operation('≠', $1, $3);
+}
+
+booleen: entier INFERIEUR_LARGE entier {
+    $$ = creer_n_operation('≤', $1, $3);
+}
+
+booleen: entier INFERIEUR_STRICT entier {
+    $$ = creer_n_operation('<', $1, $3);
+}
+
+booleen: entier SUPERIEUR_LARGE entier {
+    $$ = creer_n_operation('≥', $1, $3);
+}
+
+booleen: entier SUPERIEUR_STRICT entier {
+    $$ = creer_n_operation('>', $1, $3);
+}
+
+// b. Opérations booléennnes
 
 booleen: disjonction {
     $$ = $1;
@@ -160,20 +202,20 @@ conjonction: negation {
     $$ = $1;
 }
 
-negation: NON booleen {
+negation: NON atome {
     $$ = creer_n_operation('!', $2, NULL);
 }
 
-
-// Valeurs
-
-
-expr: ENTIER {
-	$$ = creer_n_entier($1);
+negation: atome {
+    $$ = $1;
 }
 
-expr: BOOLEEN {
-    $$ = creer_n_entier($1);
+atome: BOOLEEN {
+    $$ = creer_n_booleen($1);
+}
+
+atome: PARENTHESE_OUVRANTE booleen PARENTHESE_FERMANTE {
+	$$ = $2;
 }
 
 
