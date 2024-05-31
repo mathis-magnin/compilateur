@@ -137,7 +137,7 @@ void gen_operation(n_operation *n)
   }
   else if (n->type_operation == '-')
   {
-    arm_instruction("sub", "r0", "r1", "r0", "effectue l'opération r0-r1 et met le résultat dans r0");
+    arm_instruction("sub", "r0", "r0", "r1", "effectue l'opération r0-r1 et met le résultat dans r0");
   }
   else if (n->type_operation == '*')
   {
@@ -163,6 +163,18 @@ void gen_operation(n_operation *n)
      asm("bl __aeabi_idivmod");
      // Le résultat est stocké dans r1 après l'appel à __aeabi_idivmod
    }*/
+  else if (n->type_operation == '|')
+  {
+    arm_instruction("add", "r2", "r0", "r1", "effectue l'opération r0+r1 et met le résultat dans r2");
+    arm_instruction("cmp", "r2", "r2", "#0", "compare r2 à 0 (r2-0) et met le résultat dans r2");
+  }
+  else if (n->type_operation == '&')
+  {
+    arm_instruction("mul", "r0", "r0", "r1", "effectue l'opération (r0 et r1) et met le résultat dans r0");
+  }
+  else if (n->type_operation == '!')
+  {
+  }
   else
   {
     fprintf(stderr, "génération opération %d non implémenté\n", n->type_operation);
