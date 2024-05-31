@@ -4,10 +4,11 @@
 #include "arbre_abstrait.h"
 #include "generation_code.h"
 
+/*
 // Déclaration de __aeabi_idiv
 asm(".global __aeabi_idiv");
 // Déclaration de __aeabi_idivmod
-asm(".global __aeabi_idivmod");
+asm(".global __aeabi_idivmod");*/
 
 // pour afficher le code uniquement si l'option afficher_arm vaut 1
 #define printifm(format, ...)    \
@@ -61,8 +62,8 @@ void gen_prog(n_programme *n)
   printifm("%s", "	.text\n");
   printifm("%s", "	.align	2\n");
   printifm("%s", "	.global	main\n");
-  printifm("%s", "main:\n")
-      arm_instruction("push", "{fp,lr}", NULL, NULL, NULL);
+  printifm("%s", "main:\n");
+  arm_instruction("push", "{fp,lr}", NULL, NULL, NULL);
   arm_instruction("add", "fp", "sp", "#4", NULL);
   gen_liste_instructions(n->instructions);
   arm_instruction("mov", "r0", "#0", NULL, NULL);
@@ -110,6 +111,13 @@ void gen_exp(n_exp *n)
     arm_instruction("mov", "r1", buffer, NULL, NULL);  // on met sur la pile la valeur entière
     arm_instruction("push", "{r1}", NULL, NULL, NULL); // on met sur la pile la valeur entière
   }
+  else if (n->type_exp == i_booleen)
+  {
+    char buffer[12];
+    sprintf(buffer, "#%d", n->u.valeur);
+    arm_instruction("mov", "r1", buffer, NULL, NULL);  // on met sur la pile la valeur booléenne (0 ou 1)
+    arm_instruction("push", "{r1}", NULL, NULL, NULL); // on met sur la pile la valeur booléenne (0 ou 1)
+  }
   else
   {
     fprintf(stderr, "génération type expression non implémenté\n");
@@ -134,27 +142,27 @@ void gen_operation(n_operation *n)
   else if (n->type_operation == '*')
   {
     arm_instruction("mul", "r0", "r1", "r0", "effectue l'opération r0*r1 et met le résultat dans r0");
-  }
-  else if (n->type_operation == '/')
-  {
-    // Charger r0
-    asm("mov r0, %0" : : "r"("r0"));
-    // Charger r1
-    asm("mov r1, %0" : : "r"("r1"));
-    // Appeler la fonction de division
-    asm("bl __aeabi_idiv");
-    // Le résultat est stocké dans r0 après l'appel à __aeabi_idiv
-  }
-  else if (n->type_operation == '%')
-  {
-    // Charger r0
-    asm("mov r0, %0" : : "r"("r0"));
-    // Charger r1
-    asm("mov r1, %0" : : "r"("r1"));
-    // Appeler la fonction de modulo
-    asm("bl __aeabi_idivmod");
-    // Le résultat est stocké dans r1 après l'appel à __aeabi_idivmod
-  }
+  } /*
+   else if (n->type_operation == '/')
+   {
+     // Charger r0
+     asm("mov r0, %0" : : "r"("r0"));
+     // Charger r1
+     asm("mov r1, %0" : : "r"("r1"));
+     // Appeler la fonction de division
+     asm("bl __aeabi_idiv");
+     // Le résultat est stocké dans r0 après l'appel à __aeabi_idiv
+   }
+   else if (n->type_operation == '%')
+   {
+     // Charger r0
+     asm("mov r0, %0" : : "r"("r0"));
+     // Charger r1
+     asm("mov r1, %0" : : "r"("r1"));
+     // Appeler la fonction de modulo
+     asm("bl __aeabi_idivmod");
+     // Le résultat est stocké dans r1 après l'appel à __aeabi_idivmod
+   }*/
   else
   {
     fprintf(stderr, "génération opératon %d non implémenté\n", n->type_operation);
