@@ -972,7 +972,7 @@ YY_RULE_SETUP
 case 32:
 YY_RULE_SETUP
 #line 53 "analyse_lexicale.l"
-{return IDENTIFIANT;}
+{yylval.identifiant=yytext; return IDENTIFIANT;}
 	YY_BREAK
 case 33:
 /* rule 33 can match eol */

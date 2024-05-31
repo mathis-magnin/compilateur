@@ -93,12 +93,17 @@ union YYSTYPE
 
     int entier;
     int booleen;
+    char *identifiant;
     n_programme* prog;
     n_l_instructions* l_inst;
     n_instruction* inst;
     n_exp* exp;
+    n_l_fonctions *l_fonctions;
+    n_fonction *fonction;
+    n_l_parametres *l_parametres;
+    n_parametre *parametre;
 
-#line 102 "symboles.h"
+#line 107 "symboles.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

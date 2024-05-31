@@ -50,7 +50,7 @@
 
 ([1-9][0-9]*|0)       {yylval.entier=atoi(yytext); return ENTIER;}
 "Vrai"|"Faux"         {yylval.booleen=!strcmp(yytext, "Vrai"); return BOOLEEN;}
-[a-zA-Z][a-zA-Z0-9]*  {return IDENTIFIANT;}
+[a-zA-Z][a-zA-Z0-9]*  {yylval.identifiant=yytext; return IDENTIFIANT;}
 [ \t\r\n]             {}
 "#".*                 {}
 
