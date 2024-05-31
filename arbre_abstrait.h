@@ -102,8 +102,9 @@ struct n_exp
   enum
   {
     i_operation,
-    i_entier
-  } type_exp; // pour le moment une expression  peut-être une opération ou un entier
+    i_entier,
+    i_booleen
+  } type_exp; // pour le moment une expression peut-être une opération ou un entier
   union
   {
     n_operation *operation;
@@ -112,6 +113,28 @@ struct n_exp
 };
 
 //
+
+typedef enum
+{
+  i_plus,
+  i_moins,
+  i_fois,
+  i_division,
+  i_modulo,
+
+  i_egalite,
+  i_difference,
+  i_inferieur_strict,
+  i_superieur_strict,
+  i_inferieur_large,
+  i_superieur_large,
+
+  i_ou,
+  i_et,
+  i_non
+} type_op;
+
+static const char type_op_value[] = {'+', '-', '*', '/', '%', 'e', 'd', '<', '>', 'i', 's', '|', '&', '!'};
 
 struct n_operation
 {
@@ -143,6 +166,7 @@ n_programme *creer_n_programme(n_l_fonctions *fonctions, n_l_instructions *instr
 n_l_instructions *creer_n_l_instructions(n_instruction *instruction, n_l_instructions *instructions);
 n_instruction *creer_n_ecrire(n_exp *exp);
 n_exp *creer_n_entier(int valeur);
+n_exp *creer_n_booleen(int valeur);
 n_exp *creer_n_operation(char type_operation, n_exp *exp1, n_exp *exp2);
 
 #endif
