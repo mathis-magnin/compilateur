@@ -165,7 +165,7 @@ void gen_operation(n_operation *n)
    }*/
   else
   {
-    fprintf(stderr, "génération opératon %d non implémenté\n", n->type_operation);
+    fprintf(stderr, "génération opération %d non implémenté\n", n->type_operation);
     exit(1);
   }
   arm_instruction("push", "{r0}", NULL, NULL, "empile le résultat");
