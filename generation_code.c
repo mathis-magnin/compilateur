@@ -4,6 +4,11 @@
 #include "arbre_abstrait.h"
 #include "generation_code.h"
 
+// Déclaration de __aeabi_idiv
+asm(".global __aeabi_idiv");
+// Déclaration de __aeabi_idivmod
+asm(".global __aeabi_idivmod");
+
 // pour afficher le code uniquement si l'option afficher_arm vaut 1
 #define printifm(format, ...)    \
   if (afficher_arm)              \
@@ -129,6 +134,26 @@ void gen_operation(n_operation *n)
   else if (n->type_operation == '*')
   {
     arm_instruction("mul", "r0", "r1", "r0", "effectue l'opération r0*r1 et met le résultat dans r0");
+  }
+  else if (n->type_operation == '/')
+  {
+    // Charger r0
+    asm("mov r0, %0" : : "r"("r0"));
+    // Charger r1
+    asm("mov r1, %0" : : "r"("r1"));
+    // Appeler la fonction de division
+    asm("bl __aeabi_idiv");
+    // Le résultat est stocké dans r0 après l'appel à __aeabi_idiv
+  }
+  else if (n->type_operation == '%')
+  {
+    // Charger r0
+    asm("mov r0, %0" : : "r"("r0"));
+    // Charger r1
+    asm("mov r1, %0" : : "r"("r1"));
+    // Appeler la fonction de modulo
+    asm("bl __aeabi_idivmod");
+    // Le résultat est stocké dans r1 après l'appel à __aeabi_idivmod
   }
   else
   {
