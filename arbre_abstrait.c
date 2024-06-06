@@ -45,6 +45,8 @@ void afficher_entier(int valeur, int indent)
 	printf("[Entier: %d]\n", valeur);
 }
 
+//
+
 void afficher_booleen(int valeur, int indent)
 {
 	for (int i = 0; i < indent; i++)
@@ -54,12 +56,103 @@ void afficher_booleen(int valeur, int indent)
 	printf("[Booléen: %s]\n", (valeur == 1) ? "Vrai" : "Faux");
 }
 
+//
+
 void afficher_n_programme(n_programme *prog, int indent)
 {
 	afficher("<programme>", indent);
+	afficher_n_l_fonctions(prog->fonctions, indent + 1);
 	afficher_n_l_instructions(prog->instructions, indent + 1);
 	afficher("</programme>", indent);
 }
+
+//
+
+void afficher_n_l_fonctions(n_l_fonctions *fonctions, int indent)
+{
+	afficher("<liste_fonctions>", indent);
+
+	while (fonctions != NULL)
+	{
+		if (fonctions->fonction != NULL)
+		{
+			afficher_n_fonction(fonctions->fonction, indent + 1);
+		}
+		fonctions = fonctions->fonctions;
+	}
+
+	afficher("</liste_fonctions>", indent);
+}
+
+//
+
+void afficher_n_fonction(n_fonction *fonction, int indent)
+{
+	afficher("<fonction>", indent);
+
+	afficher_type_declaration(fonction->type, indent + 1);
+	afficher_identifiant(fonction->identifiant, indent + 1);
+	afficher_n_l_parametres(fonction->parametres, indent + 1);
+	afficher_n_l_instructions(fonction->instructions, indent + 1);
+
+	afficher("</fonction>", indent);
+}
+
+//
+
+void afficher_type_declaration(type_declaration type, int indent)
+{
+
+	for (int i = 0; i < indent; i++)
+	{
+		printf(" ");
+	}
+	printf("[Type: %s]\n", (type == TYPE_DECLARATION_BOOLEEN) ? "Booléen" : "Entier");
+}
+
+//
+
+void afficher_identifiant(char *identifiant, int indent)
+{
+
+	for (int i = 0; i < indent; i++)
+	{
+		printf(" ");
+	}
+	printf("[Identifiant: %s]\n", identifiant);
+}
+
+//
+
+void afficher_n_l_parametres(n_l_parametres *parametres, int indent)
+{
+	afficher("<liste_parametres>", indent);
+
+	while (parametres != NULL)
+	{
+		if (parametres->parametre != NULL)
+		{
+			afficher_n_parametre(parametres->parametre, indent + 1);
+		}
+		parametres = parametres->parametres;
+	}
+
+	afficher("</liste_parametres>", indent);
+}
+
+//
+
+void afficher_n_parametre(n_parametre *parametre, int indent)
+{
+	afficher("<parametre>", indent);
+
+	afficher_type_declaration(parametre->type, indent + 1);
+	afficher_identifiant(parametre->identifiant, indent + 1);
+
+	afficher("</parametre>", indent);
+}
+
+//
 
 void afficher_n_l_instructions(n_l_instructions *instructions, int indent)
 {
@@ -208,7 +301,8 @@ n_fonction *creer_n_fonction(char *identifiant, n_l_parametres *parametres, n_l_
 {
 	n_fonction *n = malloc(sizeof(n_fonction));
 
-	n->identifiant = identifiant;
+	n->identifiant = malloc(sizeof(char) * strlen(identifiant));
+	strcpy(n->identifiant, identifiant);
 	n->parametres = parametres;
 	n->instructions = instructions;
 
@@ -234,7 +328,8 @@ n_parametre *creer_n_parametre_booleen(char *identifiant)
 	n_parametre *n = malloc(sizeof(n_parametre));
 
 	n->type = TYPE_DECLARATION_BOOLEEN;
-	n->identifiant = identifiant;
+	n->identifiant = malloc(sizeof(char) * strlen(identifiant));
+	strcpy(n->identifiant, identifiant);
 
 	return n;
 }
@@ -246,7 +341,8 @@ n_parametre *creer_n_parametre_entier(char *identifiant)
 	n_parametre *n = malloc(sizeof(n_parametre));
 
 	n->type = TYPE_DECLARATION_ENTIER;
-	n->identifiant = identifiant;
+	n->identifiant = malloc(sizeof(char) * strlen(identifiant));
+	strcpy(n->identifiant, identifiant);
 
 	return n;
 }

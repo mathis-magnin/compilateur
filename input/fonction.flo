@@ -1,0 +1,5 @@
+vroum(entier voiture, booleen rapide) {
+    ecrire(4 * 8);
+}
+
+ecrire(Vrai ou Faux);

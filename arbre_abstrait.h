@@ -147,6 +147,13 @@ struct n_operation
 
 /* Affichage */
 
+void afficher_n_l_fonctions(n_l_fonctions *fonctions, int indent);
+void afficher_n_fonction(n_fonction *fonction, int indent);
+void afficher_n_l_parametres(n_l_parametres *parametres, int indent);
+void afficher_type_declaration(type_declaration type, int indent);
+void afficher_identifiant(char *identifiant, int indent);
+void afficher_n_parametre(n_parametre *parametre, int indent);
+
 void afficher_n_programme(n_programme *prog, int indent);
 void afficher_n_l_instructions(n_l_instructions *instructions, int indent);
 void afficher_n_instruction(n_instruction *instruction, int indent);
