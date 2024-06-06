@@ -68,6 +68,18 @@ void afficher_n_programme(n_programme *prog, int indent)
 
 //
 
+void afficher_type(type type, int indent)
+{
+
+	for (int i = 0; i < indent; i++)
+	{
+		printf(" ");
+	}
+	printf("[Type: %s]\n", (type == TYPE_BOOLEEN) ? "Booléen" : "Entier");
+}
+
+//
+
 void afficher_n_l_fonctions(n_l_fonctions *fonctions, int indent)
 {
 	afficher("<liste_fonctions>", indent);
@@ -90,24 +102,12 @@ void afficher_n_fonction(n_fonction *fonction, int indent)
 {
 	afficher("<fonction>", indent);
 
-	afficher_type_declaration(fonction->type, indent + 1);
+	afficher_type(fonction->type, indent + 1);
 	afficher_identifiant(fonction->identifiant, indent + 1);
 	afficher_n_l_parametres(fonction->parametres, indent + 1);
 	afficher_n_l_instructions(fonction->instructions, indent + 1);
 
 	afficher("</fonction>", indent);
-}
-
-//
-
-void afficher_type_declaration(type_declaration type, int indent)
-{
-
-	for (int i = 0; i < indent; i++)
-	{
-		printf(" ");
-	}
-	printf("[Type: %s]\n", (type == TYPE_DECLARATION_BOOLEEN) ? "Booléen" : "Entier");
 }
 
 //
@@ -146,7 +146,7 @@ void afficher_n_parametre(n_parametre *parametre, int indent)
 {
 	afficher("<parametre>", indent);
 
-	afficher_type_declaration(parametre->type, indent + 1);
+	afficher_type(parametre->type, indent + 1);
 	afficher_identifiant(parametre->identifiant, indent + 1);
 
 	afficher("</parametre>", indent);
@@ -196,10 +196,6 @@ void afficher_n_exp(n_exp *exp, int indent)
 	else if (exp->type_exp == i_booleen)
 	{
 		afficher_booleen(exp->u.valeur, indent);
-	}
-	else if (exp->type_exp == i_entier)
-	{
-		afficher_entier(exp->u.valeur, indent);
 	}
 }
 
@@ -257,18 +253,6 @@ n_instruction *creer_n_ecrire(n_exp *exp)
 
 //
 
-n_exp *creer_n_entier(int valeur)
-{
-	n_exp *n = malloc(sizeof(n_exp));
-
-	n->type_exp = i_entier;
-	n->u.valeur = valeur;
-
-	return n;
-}
-
-//
-
 n_exp *creer_n_operation(char type_operation, n_exp *exp1, n_exp *exp2)
 {
 	n_exp *n = malloc(sizeof(n_exp));
@@ -280,6 +264,26 @@ n_exp *creer_n_operation(char type_operation, n_exp *exp1, n_exp *exp2)
 	n_op->exp1 = exp1;
 	n_op->exp2 = exp2;
 
+	return n;
+}
+
+//
+
+n_exp *creer_n_entier(int valeur)
+{
+	n_exp *n = malloc(sizeof(n_exp));
+
+	n->type_exp = i_entier;
+	n->u.valeur = valeur;
+
+	return n;
+}
+
+n_exp *creer_n_booleen(int valeur)
+{
+	n_exp *n = malloc(sizeof(n_exp));
+	n->type_exp = i_booleen;
+	n->u.valeur = valeur;
 	return n;
 }
 
@@ -297,10 +301,11 @@ n_l_fonctions *creer_n_l_fonctions(n_fonction *fonction, n_l_fonctions *fonction
 
 //
 
-n_fonction *creer_n_fonction(char *identifiant, n_l_parametres *parametres, n_l_instructions *instructions)
+n_fonction *creer_n_fonction(int type, char *identifiant, n_l_parametres *parametres, n_l_instructions *instructions)
 {
 	n_fonction *n = malloc(sizeof(n_fonction));
 
+	n->type = type ? TYPE_BOOLEEN : TYPE_ENTIER;
 	n->identifiant = malloc(sizeof(char) * strlen(identifiant));
 	strcpy(n->identifiant, identifiant);
 	n->parametres = parametres;
@@ -323,34 +328,13 @@ n_l_parametres *creer_n_l_parametres(n_parametre *parametre, n_l_parametres *par
 
 //
 
-n_parametre *creer_n_parametre_booleen(char *identifiant)
+n_parametre *creer_n_parametre(int type, char *identifiant)
 {
 	n_parametre *n = malloc(sizeof(n_parametre));
 
-	n->type = TYPE_DECLARATION_BOOLEEN;
+	n->type = type ? TYPE_BOOLEEN : TYPE_ENTIER;
 	n->identifiant = malloc(sizeof(char) * strlen(identifiant));
 	strcpy(n->identifiant, identifiant);
 
-	return n;
-}
-
-//
-
-n_parametre *creer_n_parametre_entier(char *identifiant)
-{
-	n_parametre *n = malloc(sizeof(n_parametre));
-
-	n->type = TYPE_DECLARATION_ENTIER;
-	n->identifiant = malloc(sizeof(char) * strlen(identifiant));
-	strcpy(n->identifiant, identifiant);
-
-	return n;
-}
-
-n_exp *creer_n_booleen(int valeur)
-{
-	n_exp *n = malloc(sizeof(n_exp));
-	n->type_exp = i_booleen;
-	n->u.valeur = valeur;
 	return n;
 }

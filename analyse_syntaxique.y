@@ -12,6 +12,7 @@ n_programme* arbre_abstrait;
 %}
 
 %union {
+    int type;
     int entier;
     int booleen;
     char *identifiant;
@@ -30,9 +31,6 @@ n_programme* arbre_abstrait;
 %define parse.lac full
 
 //Symboles terminaux qui seront fournis par yylex(), ordre non important
-
-%token TYPE_ENTIER
-%token TYPE_BOOLEEN
 
 %token AFFECTATION
 
@@ -67,6 +65,8 @@ n_programme* arbre_abstrait;
 %token PARENTHESE_FERMANTE
 %token ACCOLADE_OUVRANTE
 %token ACCOLADE_FERMANTE
+
+%token <type> TYPE
 
 %token <entier> ENTIER
 %token <booleen> BOOLEEN
@@ -125,17 +125,17 @@ listeFonctions: fonction {
     $$ = creer_n_l_fonctions($1, NULL);
 }
 
-listeFonctions: listeFonctions fonction {
-    $$ = creer_n_l_fonctions($2, $1);
+listeFonctions: fonction listeFonctions {
+    $$ = creer_n_l_fonctions($1, $2);
 }
 
 
-fonction: IDENTIFIANT PARENTHESE_OUVRANTE listeParametres PARENTHESE_FERMANTE ACCOLADE_OUVRANTE listeInstructions ACCOLADE_FERMANTE { // type
-    $$ = creer_n_fonction($1, $3, $6);
+fonction: TYPE IDENTIFIANT PARENTHESE_OUVRANTE listeParametres PARENTHESE_FERMANTE ACCOLADE_OUVRANTE listeInstructions ACCOLADE_FERMANTE { // type
+    $$ = creer_n_fonction($1, $2, $4, $7);
 }
 
-fonction: IDENTIFIANT PARENTHESE_OUVRANTE PARENTHESE_FERMANTE ACCOLADE_OUVRANTE listeInstructions ACCOLADE_FERMANTE {
-    $$ = creer_n_fonction($1, NULL, $5);
+fonction: TYPE IDENTIFIANT PARENTHESE_OUVRANTE PARENTHESE_FERMANTE ACCOLADE_OUVRANTE listeInstructions ACCOLADE_FERMANTE {
+    $$ = creer_n_fonction($1, $2, NULL, $6);
 }
 
 
@@ -148,12 +148,8 @@ listeParametres: parametre VIRGULE listeParametres {
 }
 
 
-parametre: TYPE_BOOLEEN IDENTIFIANT {
-    $$ = creer_n_parametre_booleen($2);
-}
-
-parametre: TYPE_ENTIER IDENTIFIANT {
-    $$ = creer_n_parametre_entier($2);
+parametre: TYPE IDENTIFIANT {
+    $$ = creer_n_parametre($1, $2);
 }
 
 
