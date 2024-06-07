@@ -154,6 +154,35 @@ void afficher_n_parametre(n_parametre *parametre, int indent)
 
 //
 
+void afficher_n_l_arguments(n_l_arguments *arguments, int indent)
+{
+	afficher("<liste_arguments>", indent);
+
+	while (arguments != NULL)
+	{
+		if (arguments->argument != NULL)
+		{
+			afficher_n_argument(arguments->argument, indent + 1);
+		}
+		arguments = arguments->arguments;
+	}
+
+	afficher("</git stuments>", indent);
+}
+
+//
+
+void afficher_n_argument(n_argument *argument, int indent)
+{
+	afficher("<argument>", indent);
+
+	afficher_identifiant(argument->identifiant, indent + 1);
+
+	afficher("</argument>", indent);
+}
+
+//
+
 void afficher_n_l_instructions(n_l_instructions *instructions, int indent)
 {
 	afficher("<liste_instuctions>", indent);
@@ -178,6 +207,60 @@ void afficher_n_instruction(n_instruction *instruction, int indent)
 		afficher("<ecrire>", indent);
 		afficher_n_exp(instruction->u.exp, indent + 1);
 		afficher("</ecrire>", indent);
+	}
+	if (instruction->type_instruction == i_declaration)
+	{
+		afficher("<declaration>", indent);
+		afficher_type(instruction->u.declaration->type, indent + 1);
+		afficher_identifiant(instruction->u.declaration->identifiant, indent + 1);
+		afficher("</declaration>", indent);
+	}
+	if (instruction->type_instruction == i_affectation)
+	{
+		afficher("<affectation>", indent);
+		afficher_identifiant(instruction->u.affectation->identifiant, indent + 1);
+		afficher_n_exp(instruction->u.affectation->exp, indent + 1);
+		afficher("</affectation>", indent);
+	}
+	if (instruction->type_instruction == i_cond_si)
+	{
+		afficher("<cond_si>", indent);
+		afficher_n_exp(instruction->u.cond_si->exp, indent + 1);
+		afficher_n_l_instructions(instruction->u.cond_si->instructions, indent + 1);
+		afficher("</cond_si>", indent);
+	}
+	if (instruction->type_instruction == i_cond_sinon)
+	{
+		afficher("<cond_sinon>", indent);
+		afficher_n_l_instructions(instruction->u.cond_sinon->instructions, indent + 1);
+		afficher("</cond_sinon>", indent);
+	}
+	if (instruction->type_instruction == i_cond_sinon_si)
+	{
+		afficher("<cond_sinon_si>", indent);
+		afficher_n_exp(instruction->u.cond_sinon_si->exp, indent + 1);
+		afficher_n_l_instructions(instruction->u.cond_sinon_si->instructions, indent + 1);
+		afficher("</cond_sinon_si>", indent);
+	}
+	if (instruction->type_instruction == i_tant_que)
+	{
+		afficher("<tant_que>", indent);
+		afficher_n_exp(instruction->u.tant_que->exp, indent + 1);
+		afficher_n_l_instructions(instruction->u.tant_que->instructions, indent + 1);
+		afficher("</tant_que>", indent);
+	}
+	if (instruction->type_instruction == i_retourner)
+	{
+		afficher("<retourner>", indent);
+		afficher_n_exp(instruction->u.retourner->exp, indent + 1);
+		afficher("</retourner>", indent);
+	}
+	if (instruction->type_instruction == i_appel_fonction)
+	{
+		afficher("<appel_fonction>", indent);
+		afficher_identifiant(instruction->u.appel_fonction->identifiant, indent + 1);
+		afficher_n_l_arguments(instruction->u.appel_fonction->arguments, indent + 1);
+		afficher("</appel_fonction>", indent);
 	}
 }
 
@@ -335,6 +418,159 @@ n_parametre *creer_n_parametre(int type, char *identifiant)
 	n->type = type ? TYPE_BOOLEEN : TYPE_ENTIER;
 	n->identifiant = malloc(sizeof(char) * strlen(identifiant));
 	strcpy(n->identifiant, identifiant);
+
+	return n;
+}
+
+//
+
+n_l_arguments *creer_n_l_arguments(n_argument *argument, n_l_arguments *arguments)
+{
+	n_l_arguments *n = malloc(sizeof(n_l_arguments));
+
+	n->argument = argument;
+	n->arguments = arguments;
+
+	return n;
+}
+
+//
+
+n_argument *creer_n_argument(char *identifiant)
+{
+	n_argument *n = malloc(sizeof(n_argument));
+
+	n->identifiant = malloc(sizeof(char) * strlen(identifiant));
+	strcpy(n->identifiant, identifiant);
+
+	return n;
+}
+
+//
+
+n_instruction *creer_n_declaration(type type, char *identifiant)
+{
+	n_instruction *n = malloc(sizeof(n_instruction));
+
+	n->type_instruction = i_declaration;
+	n->u.declaration = malloc(sizeof(n_declaration));
+	n->u.declaration->type = type ? TYPE_BOOLEEN : TYPE_ENTIER;
+	n->u.declaration->identifiant = malloc(sizeof(char) * strlen(identifiant));
+	strcpy(n->u.declaration->identifiant, identifiant);
+
+	return n;
+}
+
+//
+
+n_instruction *creer_n_affectation(char *identifiant, n_exp *exp)
+{
+	n_instruction *n = malloc(sizeof(n_instruction));
+
+	n->type_instruction = i_affectation;
+	n->u.affectation = malloc(sizeof(n_affectation));
+	n->u.affectation->identifiant = malloc(sizeof(char) * strlen(identifiant));
+	strcpy(n->u.affectation->identifiant, identifiant);
+	n->u.affectation->exp = exp;
+
+	return n;
+}
+
+//
+
+n_instruction *creer_n_declaration_affectation(type type, char *identifiant, n_exp *exp)
+{
+	n_instruction *n = malloc(sizeof(n_instruction));
+
+	n->type_instruction = i_declaration_affectation;
+	n->u.declaration_affectation = malloc(sizeof(n_declaration_affectation));
+	n->u.declaration_affectation->type = type ? TYPE_BOOLEEN : TYPE_ENTIER;
+	n->u.declaration_affectation->identifiant = malloc(sizeof(char) * strlen(identifiant));
+	strcpy(n->u.declaration_affectation->identifiant, identifiant);
+	n->u.declaration_affectation->exp = exp;
+
+	return n;
+}
+
+//
+
+n_instruction *creer_n_cond_si(n_exp *exp, n_l_instructions *instructions)
+{
+	n_instruction *n = malloc(sizeof(n_instruction));
+
+	n->type_instruction = i_cond_si;
+	n->u.cond_si = malloc(sizeof(n_cond_si));
+	n->u.cond_si->exp = exp;
+	n->u.cond_si->instructions = instructions;
+
+	return n;
+}
+
+//
+
+n_instruction *creer_n_cond_sinon(n_l_instructions *instructions)
+{
+	n_instruction *n = malloc(sizeof(n_instruction));
+
+	n->type_instruction = i_cond_sinon;
+	n->u.cond_sinon = malloc(sizeof(n_cond_sinon));
+	n->u.cond_sinon->instructions = instructions;
+
+	return n;
+}
+
+//
+
+n_instruction *creer_n_cond_sinon_si(n_exp *exp, n_l_instructions *instructions)
+{
+	n_instruction *n = malloc(sizeof(n_instruction));
+
+	n->type_instruction = i_cond_sinon_si;
+	n->u.cond_sinon_si = malloc(sizeof(n_cond_sinon_si));
+	n->u.cond_sinon_si->exp = exp;
+	n->u.cond_sinon_si->instructions = instructions;
+
+	return n;
+}
+
+//
+
+n_instruction *creer_n_tant_que(n_exp *exp, n_l_instructions *instructions)
+{
+	n_instruction *n = malloc(sizeof(n_instruction));
+
+	n->type_instruction = i_tant_que;
+	n->u.tant_que = malloc(sizeof(n_tant_que));
+	n->u.tant_que->exp = exp;
+	n->u.tant_que->instructions = instructions;
+
+	return n;
+}
+
+//
+
+n_instruction *creer_n_retourner(n_exp *exp)
+{
+	n_instruction *n = malloc(sizeof(n_instruction));
+
+	n->type_instruction = i_retourner;
+	n->u.retourner = malloc(sizeof(n_retourner));
+	n->u.retourner->exp = exp;
+
+	return n;
+}
+
+//
+
+n_instruction *creer_n_appel_fonction(char *identifiant, n_l_arguments *arguments)
+{
+	n_instruction *n = malloc(sizeof(n_instruction));
+
+	n->type_instruction = i_appel_fonction;
+	n->u.appel_fonction = malloc(sizeof(n_appel_fonction));
+	n->u.appel_fonction->identifiant = malloc(sizeof(char) * strlen(identifiant));
+	strcpy(n->u.appel_fonction->identifiant, identifiant);
+	n->u.appel_fonction->arguments = arguments;
 
 	return n;
 }

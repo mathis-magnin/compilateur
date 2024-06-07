@@ -24,6 +24,8 @@ n_programme* arbre_abstrait;
     n_fonction *fonction;
     n_l_parametres *l_parametres;
     n_parametre *parametre;
+    n_l_arguments *l_arguments;
+    n_argument *argument;
 }
 
 
@@ -53,6 +55,7 @@ n_programme* arbre_abstrait;
 
 %token SI
 %token SINON
+%token SINON_SI
 %token TANT_QUE
 %token RETOURNER
 
@@ -83,10 +86,21 @@ n_programme* arbre_abstrait;
 %type <l_parametres> listeParametres
 %type <parametre> parametre
 
+%type <argument> argument
+%type <l_arguments> listeArguments
+
 %type <l_inst> listeInstructions
 %type <inst> instruction
 %type <inst> ecrire
-
+%type <inst> inst_declaration
+%type <inst> inst_affectation
+%type <inst> inst_declaration_affectation
+%type <inst> cond_si
+%type <inst> cond_sinon
+%type <inst> cond_sinon_si
+%type <inst> inst_tant_que
+%type <inst> inst_retourner
+%type <inst> inst_appel_fonction
 
 %type <exp> expr
 
@@ -168,6 +182,41 @@ instruction: ecrire {
 	$$ = $1;
 }
 
+instruction: inst_declaration {
+    $$ = $1;
+}
+
+instruction: inst_affectation {
+    $$ = $1;
+}
+
+instruction: inst_declaration_affectation {
+    $$ = $1;
+}
+
+instruction: cond_si {
+    $$ = $1;
+}
+
+instruction: cond_sinon {
+    $$ = $1;
+}
+
+instruction: cond_sinon_si {
+    $$ = $1;
+}
+
+instruction: inst_tant_que {
+    $$ = $1;
+}
+
+instruction: inst_retourner {
+    $$ = $1;
+}
+
+instruction: inst_appel_fonction {
+    $$ = $1;
+}
 
 ecrire: ECRIRE PARENTHESE_OUVRANTE expr PARENTHESE_FERMANTE POINT_VIRGULE {
 	$$ = creer_n_ecrire($3);
@@ -332,6 +381,58 @@ atome: BOOLEEN {
 atome: PARENTHESE_OUVRANTE booleen PARENTHESE_FERMANTE {
 	$$ = $2;
 }
+
+// Autres Fonctions
+
+inst_declaration: TYPE IDENTIFIANT POINT_VIRGULE {
+    $$ = creer_n_declaration($1, $2);
+}
+
+inst_affectation: IDENTIFIANT AFFECTATION expr POINT_VIRGULE {
+    $$ = creer_n_affectation($1, $3);
+}
+
+inst_declaration_affectation: TYPE IDENTIFIANT AFFECTATION expr POINT_VIRGULE {
+    $$ = creer_n_declaration_affectation($1, $2, $4);
+}
+
+cond_si: SI PARENTHESE_OUVRANTE expr PARENTHESE_FERMANTE ACCOLADE_OUVRANTE listeInstructions ACCOLADE_FERMANTE {
+    $$ = creer_n_cond_si($3, $6);
+}
+
+cond_sinon: SINON ACCOLADE_OUVRANTE listeInstructions ACCOLADE_FERMANTE {
+    $$ = creer_n_cond_sinon($3);
+}
+
+cond_sinon_si: SINON_SI PARENTHESE_OUVRANTE expr PARENTHESE_FERMANTE ACCOLADE_OUVRANTE listeInstructions ACCOLADE_FERMANTE {
+    $$ = creer_n_cond_sinon_si($3, $6);
+}
+
+inst_tant_que: TANT_QUE PARENTHESE_OUVRANTE expr PARENTHESE_FERMANTE ACCOLADE_OUVRANTE listeInstructions ACCOLADE_FERMANTE {
+    $$ = creer_n_tant_que($3, $6);
+}
+
+inst_retourner: RETOURNER expr POINT_VIRGULE {
+    $$ = creer_n_retourner($2);
+}
+
+inst_appel_fonction: IDENTIFIANT PARENTHESE_OUVRANTE listeArguments PARENTHESE_FERMANTE POINT_VIRGULE {
+    $$ = creer_n_appel_fonction($1, $3);
+}
+
+listeArguments: argument {
+    $$ = creer_n_l_arguments($1, NULL);
+}
+
+listeArguments: argument VIRGULE listeArguments {
+    $$ = creer_n_l_arguments($1, $3);
+}
+
+
+argument: IDENTIFIANT {
+    $$ = creer_n_argument($1);
+}
+
 
 
 %%
