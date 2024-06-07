@@ -91,6 +91,14 @@ void gen_instruction(n_instruction *n)
     arm_instruction("ldr", "r0", "=.LC1", NULL, NULL);
     arm_instruction("bl", "printf", NULL, NULL, NULL); // on envoie la valeur de r1 sur la sortie standard
   }
+  /* instruction lire non implémentée syntaxiquement
+  else if (n->type_instruction == i_lire)
+  {
+    arm_instruction("ldr", "r0", "=.LC1", NULL, NULL);
+    arm_instruction("sub", "sp", "sp", "#4", "effectue l'opération sp-4 et stocke le résultat dans sp");
+    arm_instruction("mov", "r1", "sp", NULL, NULL);   // Copie l'adresse de sp dans r1
+    arm_instruction("bl", "scanf", NULL, NULL, NULL); // on récupère les infos de l'entrée standard
+  }*/
   else
   {
     fprintf(stderr, "génération type instruction non implémenté\n");
@@ -100,6 +108,7 @@ void gen_instruction(n_instruction *n)
 
 void gen_exp(n_exp *n)
 {
+  printf("ok");
   if (n->type_exp == i_operation)
   {
     gen_operation(n->u.operation);
@@ -127,6 +136,45 @@ void gen_exp(n_exp *n)
 
 void gen_operation(n_operation *n)
 {
+  /* Vérification de type non fonctionnelle
+  printf("type d'opération : %c\n", n->type_operation);
+  switch (n->type_operation)
+  {
+  case '+':
+  case '-':
+  case '*':
+  case '/':
+  case '%':
+    if (n->exp1->type_exp != i_operation && n->exp2->type_exp != i_operation)
+    {
+      if (n->exp1->type_exp != i_entier || n->exp2->type_exp != i_entier)
+      {
+        printf("Premier morceau de l'expression : %c\n", n->exp1->u.operation->type_operation);
+        printf("Second morceau de l'expression : %d\n", n->exp2->u.valeur);
+        fprintf(stderr, "Erreur de typage, un booléen ou plus pour une opération entière");
+        return;
+      }
+    }
+    break;
+  case 'e':
+  case 'd':
+  case '<':
+  case '>':
+  case 'i':
+  case 's':
+  case '|':
+  case '&':
+  case '!':
+    if (n->exp1->type_exp != i_operation && n->exp2->type_exp != i_operation)
+    {
+      if (n->exp1->type_exp != i_booleen || n->exp2->type_exp != i_booleen)
+      {
+        fprintf(stderr, "Erreur de typage, un entier ou plus pour une opération booléenne");
+        return;
+      }
+    }
+    break;
+  } */
   gen_exp(n->exp1); // on calcule et empile la valeur de exp1
   gen_exp(n->exp2); // on calcule et empile la valeur de exp2
   arm_instruction("pop", "{r1}", NULL, NULL, "dépile exp2 dans r1");
@@ -142,7 +190,7 @@ void gen_operation(n_operation *n)
   else if (n->type_operation == '*')
   {
     arm_instruction("mul", "r0", "r1", "r0", "effectue l'opération r0*r1 et met le résultat dans r0");
-  } /*
+  } /* / et % non fonctionnels -> bibliothèque à implémenter
    else if (n->type_operation == '/')
    {
      // Charger r0
@@ -174,7 +222,7 @@ void gen_operation(n_operation *n)
   }
   else if (n->type_operation == '!')
   {
-    /*
+    /* / et % non fonctionnels -> bibliothèque à implémenter
     arm_instruction("add", "r0", "r0", "#1", "effectue l'opération r0+1 et met le résultat dans r0");
     // Charger r0
     asm("mov r0, %0" : : "r"("r0"));
