@@ -179,6 +179,11 @@ void afficher_n_instruction(n_instruction *instruction, int indent)
 		afficher_n_exp(instruction->u.exp, indent + 1);
 		afficher("</ecrire>", indent);
 	}
+	else if (instruction->type_instruction == i_lire)
+	{
+		afficher("<lire>", indent);
+		afficher("</lire>", indent);
+	}
 }
 
 //
@@ -247,6 +252,17 @@ n_instruction *creer_n_ecrire(n_exp *exp)
 
 	n->type_instruction = i_ecrire;
 	n->u.exp = exp;
+
+	return n;
+}
+
+//
+
+n_instruction *creer_n_lire()
+{
+	n_instruction *n = malloc(sizeof(n_instruction));
+
+	n->type_instruction = i_lire;
 
 	return n;
 }

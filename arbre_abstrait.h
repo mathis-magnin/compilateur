@@ -17,7 +17,6 @@ typedef struct n_parametre n_parametre;
 typedef struct n_programme n_programme;           /* Noeud du type programme */
 typedef struct n_l_instructions n_l_instructions; /* Noeud du type liste d'instructions */
 typedef struct n_instruction n_instruction;       /* Noeud du type liste instruction */
-typedef struct n_ecrire n_ecrire;                 /* Noeud du type instruction ecrire */
 typedef struct n_exp n_exp;                       /* Noeud du type expression (arithmétique) */
 typedef struct n_operation n_operation;           /* Noeud du type operation (arithmétique) */
 
@@ -87,7 +86,8 @@ struct n_instruction
 {
   enum
   {
-    i_ecrire
+    i_ecrire,
+    i_lire
   } type_instruction; // pour le moment une instruction peut-être uniquement de type écrire. Il faudra ajouter affectation, exécution de fonction, si,sinon, etc...
   union
   {
@@ -157,7 +157,8 @@ void afficher_n_parametre(n_parametre *parametre, int indent);
 void afficher_n_programme(n_programme *prog, int indent);
 void afficher_n_l_instructions(n_l_instructions *instructions, int indent);
 void afficher_n_instruction(n_instruction *instruction, int indent);
-void afficher_n_ecrire(n_ecrire *ecrire, int indent);
+void afficher_n_ecrire(n_instruction *ecrire, int indent);
+void afficher_n_lire(n_instruction *lire, int indent);
 void afficher_n_exp(n_exp *exp, int indent);
 void afficher_n_operation(n_operation *operation, int indent);
 
@@ -171,6 +172,7 @@ n_parametre *creer_n_parametre(int type, char *identifiant);
 n_programme *creer_n_programme(n_l_fonctions *fonctions, n_l_instructions *instructions);
 n_l_instructions *creer_n_l_instructions(n_instruction *instruction, n_l_instructions *instructions);
 n_instruction *creer_n_ecrire(n_exp *exp);
+n_instruction *creer_n_lire();
 n_exp *creer_n_entier(int valeur);
 n_exp *creer_n_booleen(int valeur);
 n_exp *creer_n_operation(char type_operation, n_exp *exp1, n_exp *exp2);
