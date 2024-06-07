@@ -11,9 +11,6 @@
 %option noinput
 
 %%
-"entier"              {return TYPE_ENTIER;}
-"booleen"             {return TYPE_BOOLEEN;}
-
 "="                   {return AFFECTATION;}
 
 "+"                   {return PLUS;}
@@ -48,9 +45,11 @@
 "{"                   {return ACCOLADE_OUVRANTE;}
 "}"                   {return ACCOLADE_FERMANTE;}
 
+("entier"|"booleen")  {yylval.type=!strcmp(yytext, "entier")?0:1; return TYPE;}
+
 ([1-9][0-9]*|0)       {yylval.entier=atoi(yytext); return ENTIER;}
-"Vrai"|"Faux"         {yylval.booleen=!strcmp(yytext, "Vrai"); return BOOLEEN;}
-[a-zA-Z][a-zA-Z0-9]*  {return IDENTIFIANT;}
+("Vrai"|"Faux")       {yylval.booleen=!strcmp(yytext, "Vrai"); return BOOLEEN;}
+[a-zA-Z][a-zA-Z0-9]*  {yylval.identifiant=malloc(sizeof(char)*(strlen(yytext)+1)); strcpy(yylval.identifiant,yytext); return IDENTIFIANT;}
 [ \t\r\n]             {}
 "#".*                 {}
 
@@ -70,7 +69,6 @@ int yywrap(){
 
 int token_fermes[] = 
 {
-  TYPE_ENTIER, TYPE_BOOLEEN, 
   AFFECTATION, 
   PLUS, MOINS, FOIS, DIVISION, MODULO, 
   EGALITE, DIFFERENCE, INFERIEUR_STRICT, SUPERIEUR_STRICT, INFERIEUR_LARGE, SUPERIEUR_LARGE, 
@@ -82,7 +80,6 @@ int token_fermes[] =
 
 char *str_token[] = 
 {
-  "TYPE_ENTIER", "TYPE_BOOLEEN", 
   "AFFECTATION", 
   "PLUS", "MOINS", "FOIS", "DIVISION", "MODULO", 
   "EGALITE", "DIFFERENCE", "INFERIEUR_STRICT", "SUPERIEUR_STRICT", "INFERIEUR_LARGE", "SUPERIEUR_LARGE", 
@@ -94,7 +91,6 @@ char *str_token[] =
 
 char *str_value[] = 
 {
-  "entier", "booleen", 
   "=", 
   "+", "-", "*", "/", "%", 
   "==", "!=", "<", ">", "<=", ">=", 
@@ -105,7 +101,7 @@ char *str_value[] =
 };
 
 
-int nbMotsClefs = 29;
+int nbMotsClefs = 27;
 
 void nom_token(int token, char *nom, char *valeur)
 {   
@@ -133,6 +129,11 @@ void nom_token(int token, char *nom, char *valeur)
   {
     strcpy(nom, "booleen");  
     strcpy(valeur, yytext);  
+  }
+  else if (token == TYPE)
+  {
+    strcpy(nom, "type");
+    strcpy(valeur, yytext);
   }
 }
 

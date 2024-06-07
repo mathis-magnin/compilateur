@@ -50,38 +50,37 @@ extern int yydebug;
   enum yytokentype
   {
     FIN = 0,
-    TYPE_ENTIER = 258,
-    TYPE_BOOLEEN = 259,
-    AFFECTATION = 260,
-    PLUS = 261,
-    MOINS = 262,
-    FOIS = 263,
-    DIVISION = 264,
-    MODULO = 265,
-    EGALITE = 266,
-    DIFFERENCE = 267,
-    INFERIEUR_STRICT = 268,
-    SUPERIEUR_STRICT = 269,
-    INFERIEUR_LARGE = 270,
-    SUPERIEUR_LARGE = 271,
-    ET = 272,
-    OU = 273,
-    NON = 274,
-    SI = 275,
-    SINON = 276,
-    TANT_QUE = 277,
-    RETOURNER = 278,
-    ECRIRE = 279,
-    LIRE = 280,
-    VIRGULE = 281,
-    POINT_VIRGULE = 282,
-    PARENTHESE_OUVRANTE = 283,
-    PARENTHESE_FERMANTE = 284,
-    ACCOLADE_OUVRANTE = 285,
-    ACCOLADE_FERMANTE = 286,
-    ENTIER = 287,
-    BOOLEEN = 288,
-    IDENTIFIANT = 289
+    AFFECTATION = 258,
+    PLUS = 259,
+    MOINS = 260,
+    FOIS = 261,
+    DIVISION = 262,
+    MODULO = 263,
+    EGALITE = 264,
+    DIFFERENCE = 265,
+    INFERIEUR_STRICT = 266,
+    SUPERIEUR_STRICT = 267,
+    INFERIEUR_LARGE = 268,
+    SUPERIEUR_LARGE = 269,
+    ET = 270,
+    OU = 271,
+    NON = 272,
+    SI = 273,
+    SINON = 274,
+    TANT_QUE = 275,
+    RETOURNER = 276,
+    ECRIRE = 277,
+    LIRE = 278,
+    VIRGULE = 279,
+    POINT_VIRGULE = 280,
+    PARENTHESE_OUVRANTE = 281,
+    PARENTHESE_FERMANTE = 282,
+    ACCOLADE_OUVRANTE = 283,
+    ACCOLADE_FERMANTE = 284,
+    TYPE = 285,
+    ENTIER = 286,
+    BOOLEEN = 287,
+    IDENTIFIANT = 288
   };
 #endif
 
@@ -91,14 +90,20 @@ union YYSTYPE
 {
 #line 14 "analyse_syntaxique.y"
 
+    int type;
     int entier;
     int booleen;
+    char *identifiant;
     n_programme* prog;
     n_l_instructions* l_inst;
     n_instruction* inst;
     n_exp* exp;
+    n_l_fonctions *l_fonctions;
+    n_fonction *fonction;
+    n_l_parametres *l_parametres;
+    n_parametre *parametre;
 
-#line 102 "symboles.h"
+#line 107 "symboles.h"
 
 };
 typedef union YYSTYPE YYSTYPE;
