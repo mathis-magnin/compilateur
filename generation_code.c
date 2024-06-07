@@ -174,6 +174,16 @@ void gen_operation(n_operation *n)
   }
   else if (n->type_operation == '!')
   {
+    /*
+    arm_instruction("add", "r0", "r0", "#1", "effectue l'opération r0+1 et met le résultat dans r0");
+    // Charger r0
+    asm("mov r0, %0" : : "r"("r0"));
+    // Charger l'immédiat 2
+    asm("mov #2, %0" : : "r"("#2"));
+    // Appeler la fonction de modulo
+    asm("bl __aeabi_idivmod");
+    // Le résultat du modulon est stocké dans r1 après l'appel à __aeabi_idivmod
+    */
   }
   else
   {
