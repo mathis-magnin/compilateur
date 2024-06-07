@@ -1,0 +1,6 @@
+ecrire(4 == 5);
+ecrire(4 != 5);
+ecrire(4 < 5);
+ecrire(4 <= 5);
+ecrire(4 > 5);
+ecrire(4 >= 5);
