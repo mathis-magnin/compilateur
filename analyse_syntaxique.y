@@ -86,41 +86,37 @@ n_programme* arbre_abstrait;
 %type <l_parametres> listeParametres
 %type <parametre> parametre
 
-%type <argument> argument
-%type <l_arguments> listeArguments
 
 %type <l_inst> listeInstructions
 %type <inst> instruction
-%type <inst> ecrire
-%type <inst> inst_declaration
-%type <inst> inst_affectation
-%type <inst> inst_declaration_affectation
-%type <inst> cond_si
-%type <inst> cond_sinon
-%type <inst> cond_sinon_si
-%type <inst> inst_tant_que
-%type <inst> inst_retourner
-%type <inst> inst_appel_fonction
+%type <inst> instruction_base
+%type <exp> declaration
+%type <inst> instruction_conditionnelle
+%type <inst> mot_cle_instr_cond
+
 
 %type <exp> expr
 
 %type <exp> entier
 %type <exp> op_prio_0
-%type <exp> somme
-%type <exp> soustraction
 %type <exp> op_prio_1
-%type <exp> produit
-%type <exp> quotient
-%type <exp> reste
 %type <exp> op_prio_2
-%type <exp> opposition
+%type <exp> op_prio_3
 %type <exp> facteur
 
 %type <exp> booleen
 %type <exp> disjonction
 %type <exp> conjonction
 %type <exp> negation
+%type <exp> appel_fonction_booleenne
+%type <exp> comparaison_entiere
+%type <exp> comparaison
 %type <exp> atome
+
+%type <exp> appel_fonction
+%type <l_arguments> listeArguments
+%type <argument> argument
+
 
 %%
 
@@ -132,8 +128,9 @@ prog: listeInstructions {
     arbre_abstrait = creer_n_programme(NULL, $1);
 }
 
-
-/* Fonctions */
+/*****************************/
+/* Déclarations de fonctions */
+/*****************************/
 
 listeFonctions: fonction {
     $$ = creer_n_l_fonctions($1, NULL);
@@ -166,8 +163,9 @@ parametre: TYPE IDENTIFIANT {
     $$ = creer_n_parametre($1, $2);
 }
 
-
+/****************/
 /* Instructions */
+/****************/
 
 listeInstructions: instruction {
     $$ = creer_n_l_instructions($1, NULL);
@@ -175,56 +173,69 @@ listeInstructions: instruction {
 
 listeInstructions: instruction listeInstructions {
     $$ = creer_n_l_instructions($1, $2);
-} 
-
-
-instruction: ecrire {
-	$$ = $1;
 }
 
-instruction: inst_declaration {
+instruction: instruction_base POINT_VIRGULE {
     $$ = $1;
 }
 
-instruction: inst_affectation {
-    $$ = $1;
+instruction: instruction_conditionnelle ACCOLADE_OUVRANTE listeInstructions ACCOLADE_FERMANTE {
+    $$ = creer_n_instruction_conditionnelle($1, $3);
 }
 
-instruction: inst_declaration_affectation {
-    $$ = $1;
-}
+// 1) a. Instruction de base
 
-instruction: cond_si {
-    $$ = $1;
-}
-
-instruction: cond_sinon {
-    $$ = $1;
-}
-
-instruction: cond_sinon_si {
-    $$ = $1;
-}
-
-instruction: inst_tant_que {
-    $$ = $1;
-}
-
-instruction: inst_retourner {
-    $$ = $1;
-}
-
-instruction: inst_appel_fonction {
-    $$ = $1;
-}
-
-ecrire: ECRIRE PARENTHESE_OUVRANTE expr PARENTHESE_FERMANTE POINT_VIRGULE {
+instruction_base: ECRIRE PARENTHESE_OUVRANTE expr PARENTHESE_FERMANTE {
 	$$ = creer_n_ecrire($3);
 }
 
+instruction_base: RETOURNER expr {
+    $$ = creer_n_retourner($2);
+}
 
-// Expressions
+// 1) b. Déclarations et affectations
 
+instruction_base: TYPE IDENTIFIANT declaration {
+    $$ = creer_n_declaration($1, $2, $3);
+}
+
+instruction_base: IDENTIFIANT AFFECTATION expr {
+    $$ = creer_n_affectation($1, $3);
+}
+
+declaration: {
+    $$ = NULL;
+}
+
+declaration: AFFECTATION expr {
+    $$ = $2;
+}
+
+// 2) Instructions conditionnelles
+
+instruction_conditionnelle: mot_cle_instr_cond PARENTHESE_OUVRANTE booleen PARENTHESE_FERMANTE {
+    $$ = creer_n_condition($1, $3);
+}
+
+instruction_conditionnelle: SINON {
+    $$ = creer_n_sinon();
+}
+
+mot_cle_instr_cond: SI {
+    $$ = creer_n_si();
+}
+
+mot_cle_instr_cond: SINON_SI {
+    $$ = creer_n_sinon_si();
+}
+
+mot_cle_instr_cond: TANT_QUE {
+    $$ = creer_n_tant_que();
+}
+
+/***************/
+/* Expressions */
+/***************/
 
 expr: entier {
     $$ = $1;
@@ -242,74 +253,64 @@ entier: op_prio_0 {
 
 // a. Opérations de priorité 0
 
-op_prio_0: somme {
-    $$ = $1;
+op_prio_0: op_prio_0 PLUS op_prio_1 {
+	$$ = creer_n_operation(type_op_value[i_plus], $1, $3);
 }
 
-op_prio_0: soustraction {
-    $$ = $1;
+op_prio_0: op_prio_0 MOINS op_prio_1 {
+	$$ = creer_n_operation(type_op_value[i_moins], $1, $3);
 }
 
 op_prio_0: op_prio_1 {
     $$ = $1;
 }
 
-somme: op_prio_0 PLUS op_prio_1 {
-	$$ = creer_n_operation(type_op_value[i_plus], $1, $3);
-}
-
-soustraction: op_prio_0 MOINS op_prio_1 {
-	$$ = creer_n_operation(type_op_value[i_moins], $1, $3);
-}
-
 // b. Opérations de priorité 1
 
-op_prio_1: produit {
-    $$ = $1;
+op_prio_1: op_prio_1 FOIS op_prio_2 {
+	$$ = creer_n_operation(type_op_value[i_fois], $1 , $3);
 }
 
-op_prio_1: quotient {
-    $$ = $1;
+op_prio_1: op_prio_1 DIVISION op_prio_2 {
+	$$ = creer_n_operation(type_op_value[i_division], $1 , $3);
 }
 
-op_prio_1: reste {
-    $$ = $1;
+op_prio_1: op_prio_1 MODULO op_prio_2 {
+	$$ = creer_n_operation(type_op_value[i_modulo], $1 , $3);
 }
 
 op_prio_1: op_prio_2 {
     $$ = $1;
 }
 
-produit: op_prio_1 FOIS op_prio_2 {
-	$$ = creer_n_operation(type_op_value[i_fois], $1 , $3);
-}
-
-quotient: op_prio_1 DIVISION op_prio_2 {
-	$$ = creer_n_operation(type_op_value[i_division], $1 , $3);
-}
-
-reste: op_prio_1 MODULO op_prio_2 {
-	$$ = creer_n_operation(type_op_value[i_modulo], $1 , $3);
-}
-
 // c. Opérations de priorité 2
 
-op_prio_2: opposition {
-    $$ = $1;
-}
-
-op_prio_2: facteur {
-    $$ = $1;
-}
-
-opposition: MOINS facteur {
+op_prio_2: MOINS op_prio_3 {
 	$$ = creer_n_operation(type_op_value[i_fois], creer_n_entier(-1), $2);
 }
 
-// d. Composants de base de l'opération
+op_prio_2: op_prio_3 {
+    $$ = $1;
+}
+
+// d. Appel à une fonction
+/* 3 conflits red/red viennent de cette règle *//*
+op_prio_3: appel_fonction {
+    $$ = $1;
+}
+*/
+op_prio_3: facteur {
+    $$ = $1;
+}
+
+// e. Composants de base de l'opération
 
 facteur: ENTIER {
     $$ = creer_n_entier($1);
+}
+
+facteur: LIRE PARENTHESE_OUVRANTE PARENTHESE_FERMANTE {
+    $$ = creer_n_lire();
 }
 
 facteur: PARENTHESE_OUVRANTE entier PARENTHESE_FERMANTE {
@@ -318,33 +319,7 @@ facteur: PARENTHESE_OUVRANTE entier PARENTHESE_FERMANTE {
 
 // 2. Expressions booléennes
 
-// a. Comparaisons d'entiers
-
-booleen: entier EGALITE entier {
-    $$ = creer_n_operation(type_op_value[i_egalite], $1, $3);
-}
-
-booleen: entier DIFFERENCE entier {
-    $$ = creer_n_operation(type_op_value[i_difference], $1, $3);
-}
-
-booleen: entier INFERIEUR_LARGE entier {
-    $$ = creer_n_operation(type_op_value[i_inferieur_large], $1, $3);
-}
-
-booleen: entier INFERIEUR_STRICT entier {
-    $$ = creer_n_operation(type_op_value[i_inferieur_strict], $1, $3);
-}
-
-booleen: entier SUPERIEUR_LARGE entier {
-    $$ = creer_n_operation(type_op_value[i_superieur_large], $1, $3);
-}
-
-booleen: entier SUPERIEUR_STRICT entier {
-    $$ = creer_n_operation(type_op_value[i_superieur_strict], $1, $3);
-}
-
-// b. Opérations booléennnes
+// a. Opérations booléennnes
 
 booleen: disjonction {
     $$ = $1;
@@ -366,11 +341,27 @@ conjonction: negation {
     $$ = $1;
 }
 
-negation: NON atome {
+negation: NON comparaison_entiere {
     $$ = creer_n_operation(type_op_value[i_non], $2, NULL);
 }
 
-negation: atome {
+negation: comparaison_entiere {
+    $$ = $1;
+}
+
+comparaison_entiere: comparaison {
+    $$ = $1;
+}
+
+comparaison_entiere: appel_fonction_booleenne {
+    $$ = $1;
+}
+
+appel_fonction_booleenne: appel_fonction {
+    $$ = $1;
+}
+
+appel_fonction_booleenne: atome {
     $$ = $1;
 }
 
@@ -382,41 +373,40 @@ atome: PARENTHESE_OUVRANTE booleen PARENTHESE_FERMANTE {
 	$$ = $2;
 }
 
-// Autres Fonctions
+// b. Comparaisons d'entiers
 
-inst_declaration: TYPE IDENTIFIANT POINT_VIRGULE {
-    $$ = creer_n_declaration($1, $2);
+comparaison: entier EGALITE entier {
+    $$ = creer_n_operation(type_op_value[i_egalite], $1, $3);
 }
 
-inst_affectation: IDENTIFIANT AFFECTATION expr POINT_VIRGULE {
-    $$ = creer_n_affectation($1, $3);
+comparaison: entier DIFFERENCE entier {
+    $$ = creer_n_operation(type_op_value[i_difference], $1, $3);
 }
 
-inst_declaration_affectation: TYPE IDENTIFIANT AFFECTATION expr POINT_VIRGULE {
-    $$ = creer_n_declaration_affectation($1, $2, $4);
+comparaison: entier INFERIEUR_LARGE entier {
+    $$ = creer_n_operation(type_op_value[i_inferieur_large], $1, $3);
 }
 
-cond_si: SI PARENTHESE_OUVRANTE expr PARENTHESE_FERMANTE ACCOLADE_OUVRANTE listeInstructions ACCOLADE_FERMANTE {
-    $$ = creer_n_cond_si($3, $6);
+comparaison: entier INFERIEUR_STRICT entier {
+    $$ = creer_n_operation(type_op_value[i_inferieur_strict], $1, $3);
 }
 
-cond_sinon: SINON ACCOLADE_OUVRANTE listeInstructions ACCOLADE_FERMANTE {
-    $$ = creer_n_cond_sinon($3);
+comparaison: entier SUPERIEUR_LARGE entier {
+    $$ = creer_n_operation(type_op_value[i_superieur_large], $1, $3);
 }
 
-cond_sinon_si: SINON_SI PARENTHESE_OUVRANTE expr PARENTHESE_FERMANTE ACCOLADE_OUVRANTE listeInstructions ACCOLADE_FERMANTE {
-    $$ = creer_n_cond_sinon_si($3, $6);
+comparaison: entier SUPERIEUR_STRICT entier {
+    $$ = creer_n_operation(type_op_value[i_superieur_strict], $1, $3);
 }
 
-inst_tant_que: TANT_QUE PARENTHESE_OUVRANTE expr PARENTHESE_FERMANTE ACCOLADE_OUVRANTE listeInstructions ACCOLADE_FERMANTE {
-    $$ = creer_n_tant_que($3, $6);
+// 3. Appel de fonction
+
+appel_fonction: IDENTIFIANT PARENTHESE_OUVRANTE PARENTHESE_FERMANTE {
+    $$ = creer_n_appel_fonction($1, NULL);
 }
 
-inst_retourner: RETOURNER expr POINT_VIRGULE {
-    $$ = creer_n_retourner($2);
-}
-
-inst_appel_fonction: IDENTIFIANT PARENTHESE_OUVRANTE listeArguments PARENTHESE_FERMANTE POINT_VIRGULE {
+/* 1 des 3 conflits red/red de la règle "op_prio_3: appel_fonction" (autre que celui de la règle "argument: expr") vient d'une des 5 règles suivantes */
+appel_fonction: IDENTIFIANT PARENTHESE_OUVRANTE listeArguments PARENTHESE_FERMANTE {
     $$ = creer_n_appel_fonction($1, $3);
 }
 
@@ -428,12 +418,14 @@ listeArguments: argument VIRGULE listeArguments {
     $$ = creer_n_l_arguments($1, $3);
 }
 
-
 argument: IDENTIFIANT {
-    $$ = creer_n_argument($1);
+    $$ = creer_n_argument_variable($1);
 }
 
-
+/* 1 des 3 conflits red/red de la règle "op_prio_3: appel_fonction" vient de cette règle */
+argument: expr {
+    $$ = creer_n_argument_expression($1);
+}
 
 %%
 
