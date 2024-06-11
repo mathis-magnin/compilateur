@@ -4,12 +4,6 @@
 #include "arbre_abstrait.h"
 #include "generation_code.h"
 
-/*
-// Déclaration de __aeabi_idiv
-asm(".global __aeabi_idiv");
-// Déclaration de __aeabi_idivmod
-asm(".global __aeabi_idivmod");*/
-
 // pour afficher le code uniquement si l'option afficher_arm vaut 1
 #define printifm(format, ...)    \
   if (afficher_arm)              \
@@ -53,6 +47,11 @@ void arm_instruction(char *opcode, char *op1, char *op2, char *op3, char *commen
 
 void gen_prog(n_programme *n)
 {
+
+  // Déclaration de __aeabi_idiv
+  asm(".global __aeabi_idiv");
+  // Déclaration de __aeabi_idivmod
+  asm(".global __aeabi_idivmod");
 
   printifm("%s", ".LC0:\n");
   printifm("%s", "	.ascii	\"%d\\000\"\n");
@@ -108,7 +107,6 @@ void gen_instruction(n_instruction *n)
 
 void gen_exp(n_exp *n)
 {
-  printf("ok");
   if (n->type_exp == i_operation)
   {
     gen_operation(n->u.operation);
@@ -190,27 +188,15 @@ void gen_operation(n_operation *n)
   else if (n->type_operation == '*')
   {
     arm_instruction("mul", "r0", "r1", "r0", "effectue l'opération r0*r1 et met le résultat dans r0");
-  } /* / et % non fonctionnels -> bibliothèque à implémenter
-   else if (n->type_operation == '/')
-   {
-     // Charger r0
-     asm("mov r0, %0" : : "r"("r0"));
-     // Charger r1
-     asm("mov r1, %0" : : "r"("r1"));
-     // Appeler la fonction de division
-     asm("bl __aeabi_idiv");
-     // Le résultat est stocké dans r0 après l'appel à __aeabi_idiv
-   }
-   else if (n->type_operation == '%')
-   {
-     // Charger r0
-     asm("mov r0, %0" : : "r"("r0"));
-     // Charger r1
-     asm("mov r1, %0" : : "r"("r1"));
-     // Appeler la fonction de modulo
-     asm("bl __aeabi_idivmod");
-     // Le résultat est stocké dans r1 après l'appel à __aeabi_idivmod
-   }*/
+  }
+  else if (n->type_operation == '/')
+  {
+    arm_instruction("bl ", "__aeabi_idiv", "", "", "");
+  }
+  else if (n->type_operation == '%')
+  {
+    arm_instruction("bl ", "__aeabi_idivmod", "", "", "");
+  }
   else if (n->type_operation == '|')
   {
     arm_instruction("add", "r2", "r0", "r1", "effectue l'opération r0+r1 et met le résultat dans r2");
@@ -222,16 +208,20 @@ void gen_operation(n_operation *n)
   }
   else if (n->type_operation == '!')
   {
-    /* / et % non fonctionnels -> bibliothèque à implémenter
     arm_instruction("add", "r0", "r0", "#1", "effectue l'opération r0+1 et met le résultat dans r0");
     // Charger r0
-    asm("mov r0, %0" : : "r"("r0"));
+    char buffer[12];
+    sprintf(buffer, "#%d", n->exp1->u.valeur);
+    arm_instruction("mov", "r0", buffer, NULL, NULL);
+    arm_instruction("push", "{r0}", NULL, NULL, NULL);
     // Charger l'immédiat 2
-    asm("mov #2, %0" : : "r"("#2"));
+    char buffer2[12];
+    sprintf(buffer2, "#%d", 2);
+    arm_instruction("mov", "#2", buffer2, NULL, NULL);
+    arm_instruction("push", "{r1}", NULL, NULL, NULL);
     // Appeler la fonction de modulo
-    asm("bl __aeabi_idivmod");
-    // Le résultat du modulon est stocké dans r1 après l'appel à __aeabi_idivmod
-    */
+    arm_instruction("bl ", "__aeabi_idivmod", "", "", "");
+    // Le résultat est chargé dans r1
   }
   else
   {
