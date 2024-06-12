@@ -134,7 +134,7 @@ void gen_exp(n_exp *n)
 
 void gen_operation(n_operation *n)
 {
-  /* Vérification de type non fonctionnelle
+  /* Vérification de type non fonctionnelle */
   printf("type d'opération : %c\n", n->type_operation);
   switch (n->type_operation)
   {
@@ -156,10 +156,30 @@ void gen_operation(n_operation *n)
     break;
   case 'e':
   case 'd':
+    if (n->exp1->type_exp != i_operation && n->exp2->type_exp != i_operation)
+    {
+      if (n->exp1->type_exp != n->exp2->type_exp)
+      {
+        printf("Premier morceau de l'expression : %c\n", n->exp1->u.operation->type_operation);
+        printf("Second morceau de l'expression : %d\n", n->exp2->u.valeur);
+        fprintf(stderr, "Erreur de typage, comparaison entre deux éléments de type différents");
+        return;
+      }
+    }
+    break;
   case '<':
   case '>':
   case 'i':
   case 's':
+    if (n->exp1->type_exp != i_operation && n->exp2->type_exp != i_operation)
+    {
+      if (n->exp1->type_exp != i_entier || n->exp2->type_exp != i_entier)
+      {
+        fprintf(stderr, "Erreur de typage, comparaison d'ordre entre deux éléments de type différents");
+        return;
+      }
+    }
+    break;
   case '|':
   case '&':
   case '!':
@@ -172,7 +192,7 @@ void gen_operation(n_operation *n)
       }
     }
     break;
-  } */
+  }
   gen_exp(n->exp1); // on calcule et empile la valeur de exp1
   gen_exp(n->exp2); // on calcule et empile la valeur de exp2
   arm_instruction("pop", "{r1}", NULL, NULL, "dépile exp2 dans r1");
@@ -208,6 +228,8 @@ void gen_operation(n_operation *n)
   }
   else if (n->type_operation == '!')
   {
+    printf("exp1 == %d\n", n->exp1->u.valeur);
+    printf("exp2 == %d\n", n->exp2->u.valeur);
     arm_instruction("add", "r0", "r0", "#1", "effectue l'opération r0+1 et met le résultat dans r0");
     // Charger r0
     char buffer[12];
