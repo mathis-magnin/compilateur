@@ -67,21 +67,20 @@ extern int yydebug;
     NON = 272,
     SI = 273,
     SINON = 274,
-    SINON_SI = 275,
-    TANT_QUE = 276,
-    RETOURNER = 277,
-    ECRIRE = 278,
-    LIRE = 279,
-    VIRGULE = 280,
-    POINT_VIRGULE = 281,
-    PARENTHESE_OUVRANTE = 282,
-    PARENTHESE_FERMANTE = 283,
-    ACCOLADE_OUVRANTE = 284,
-    ACCOLADE_FERMANTE = 285,
-    TYPE = 286,
-    ENTIER = 287,
-    BOOLEEN = 288,
-    IDENTIFIANT = 289
+    TANT_QUE = 275,
+    RETOURNER = 276,
+    ECRIRE = 277,
+    LIRE = 278,
+    VIRGULE = 279,
+    POINT_VIRGULE = 280,
+    PARENTHESE_OUVRANTE = 281,
+    PARENTHESE_FERMANTE = 282,
+    ACCOLADE_OUVRANTE = 283,
+    ACCOLADE_FERMANTE = 284,
+    TYPE = 285,
+    ENTIER = 286,
+    BOOLEEN = 287,
+    IDENTIFIANT = 288
   };
 #endif
 
@@ -104,9 +103,8 @@ union YYSTYPE
     n_l_parametres *l_parametres;
     n_parametre *parametre;
     n_l_arguments *l_arguments;
-    n_argument *argument;
 
-#line 110 "symboles.h"
+#line 108 "symboles.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

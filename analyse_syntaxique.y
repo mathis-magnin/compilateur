@@ -25,7 +25,6 @@ n_programme* arbre_abstrait;
     n_l_parametres *l_parametres;
     n_parametre *parametre;
     n_l_arguments *l_arguments;
-    n_argument *argument;
 }
 
 
@@ -55,7 +54,6 @@ n_programme* arbre_abstrait;
 
 %token SI
 %token SINON
-%token SINON_SI
 %token TANT_QUE
 %token RETOURNER
 
@@ -101,22 +99,22 @@ n_programme* arbre_abstrait;
 %type <exp> op_prio_0
 %type <exp> op_prio_1
 %type <exp> op_prio_2
-%type <exp> op_prio_3
+%type <exp> op_prio_3/*
+%type <exp> fonc_ou_var_ent
+%type <exp> appel_fonc_ent*/
 %type <exp> facteur
 
 %type <exp> booleen
 %type <exp> disjonction
 %type <exp> conjonction
 %type <exp> negation
-%type <exp> appel_fonction_booleenne
 %type <exp> comparaison_entiere
 %type <exp> comparaison
+%type <exp> appel_fonc_bool
 %type <exp> atome
-
-%type <exp> appel_fonction
+/*
 %type <l_arguments> listeArguments
-%type <argument> argument
-
+*/
 
 %%
 
@@ -133,10 +131,10 @@ prog: listeInstructions {
 /*****************************/
 
 listeFonctions: fonction {
-    $$ = creer_n_l_fonctions($1, NULL);
+    $$ = creer_n_l_fonctions(NULL, $1);
 }
 
-listeFonctions: fonction listeFonctions {
+listeFonctions: listeFonctions fonction {
     $$ = creer_n_l_fonctions($1, $2);
 }
 
@@ -225,7 +223,7 @@ mot_cle_instr_cond: SI {
     $$ = creer_n_si();
 }
 
-mot_cle_instr_cond: SINON_SI {
+mot_cle_instr_cond: SINON SI {
     $$ = creer_n_sinon_si();
 }
 
@@ -293,10 +291,27 @@ op_prio_2: op_prio_3 {
     $$ = $1;
 }
 
-// d. Appel à une fonction
-/* 3 conflits red/red viennent de cette règle *//*
-op_prio_3: appel_fonction {
-    $$ = $1;
+// d. Appel à une fonction ou une variable entière PROBLEME
+/*
+//3 conflits red/red viennent de ce groupe de règles
+op_prio_3: IDENTIFIANT fonc_ou_var_ent {
+    $$ = creer_n_identifiant($1, $2);
+}
+
+fonc_ou_var_ent: {
+    $$ = creer_n_variable_entiere();
+}
+
+fonc_ou_var_ent: PARENTHESE_OUVRANTE appel_fonc_ent PARENTHESE_FERMANTE {
+    $$ = $2;
+}
+
+appel_fonc_ent: {
+    $$ = creer_n_appel_fonc_ent(NULL);
+}
+
+appel_fonc_ent: listeArguments {
+    $$ = creer_n_appel_fonc_ent($1);
 }
 */
 op_prio_3: facteur {
@@ -353,22 +368,30 @@ comparaison_entiere: comparaison {
     $$ = $1;
 }
 
-comparaison_entiere: appel_fonction_booleenne {
+comparaison_entiere: appel_fonc_bool {
     $$ = $1;
 }
-
-appel_fonction_booleenne: appel_fonction {
-    $$ = $1;
+/*
+appel_fonc_bool: IDENTIFIANT PARENTHESE_OUVRANTE PARENTHESE_FERMANTE {
+    $$ = creer_n_appel_fonc_bool($1, NULL);
 }
 
-appel_fonction_booleenne: atome {
+appel_fonc_bool: IDENTIFIANT PARENTHESE_OUVRANTE listeArguments PARENTHESE_FERMANTE {
+    $$ = creer_n_appel_fonc_bool($1, $3);
+}
+*/
+appel_fonc_bool: atome {
     $$ = $1;
 }
 
 atome: BOOLEEN {
     $$ = creer_n_booleen($1);
 }
-
+/*
+atome: IDENTIFIANT {
+    $$ = creer_n_variable_booleenne($1);
+}
+*/
 atome: PARENTHESE_OUVRANTE booleen PARENTHESE_FERMANTE {
 	$$ = $2;
 }
@@ -399,34 +422,16 @@ comparaison: entier SUPERIEUR_STRICT entier {
     $$ = creer_n_operation(type_op_value[i_superieur_strict], $1, $3);
 }
 
-// 3. Appel de fonction
-
-appel_fonction: IDENTIFIANT PARENTHESE_OUVRANTE PARENTHESE_FERMANTE {
-    $$ = creer_n_appel_fonction($1, NULL);
+// 3. Arguments d'appel de fonction
+/*
+listeArguments: expr {
+    $$ = creer_n_l_arguments(NULL, $1);
 }
 
-/* 1 des 3 conflits red/red de la règle "op_prio_3: appel_fonction" (autre que celui de la règle "argument: expr") vient d'une des 5 règles suivantes */
-appel_fonction: IDENTIFIANT PARENTHESE_OUVRANTE listeArguments PARENTHESE_FERMANTE {
-    $$ = creer_n_appel_fonction($1, $3);
-}
-
-listeArguments: argument {
-    $$ = creer_n_l_arguments($1, NULL);
-}
-
-listeArguments: argument VIRGULE listeArguments {
+listeArguments: listeArguments VIRGULE expr {
     $$ = creer_n_l_arguments($1, $3);
 }
-
-argument: IDENTIFIANT {
-    $$ = creer_n_argument_variable($1);
-}
-
-/* 1 des 3 conflits red/red de la règle "op_prio_3: appel_fonction" vient de cette règle */
-argument: expr {
-    $$ = creer_n_argument_expression($1);
-}
-
+*/
 %%
 
 int yyerror(const char *s) {

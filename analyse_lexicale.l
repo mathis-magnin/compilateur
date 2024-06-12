@@ -32,7 +32,6 @@
 
 "si"                  {return SI;}
 "sinon"               {return SINON;}
-"sinon_si"            {return SINON_SI;}
 "tantque"             {return TANT_QUE;}
 "retourner"           {return RETOURNER;}
 
@@ -74,7 +73,7 @@ int token_fermes[] =
   PLUS, MOINS, FOIS, DIVISION, MODULO, 
   EGALITE, DIFFERENCE, INFERIEUR_STRICT, SUPERIEUR_STRICT, INFERIEUR_LARGE, SUPERIEUR_LARGE, 
   ET, OU, NON, 
-  SI, SINON, SINON_SI, TANT_QUE, RETOURNER, 
+  SI, SINON, TANT_QUE, RETOURNER, 
   ECRIRE, LIRE, 
   VIRGULE, POINT_VIRGULE, PARENTHESE_OUVRANTE, PARENTHESE_FERMANTE, ACCOLADE_OUVRANTE, ACCOLADE_FERMANTE
 };
@@ -85,7 +84,7 @@ char *str_token[] =
   "PLUS", "MOINS", "FOIS", "DIVISION", "MODULO", 
   "EGALITE", "DIFFERENCE", "INFERIEUR_STRICT", "SUPERIEUR_STRICT", "INFERIEUR_LARGE", "SUPERIEUR_LARGE", 
   "ET", "OU", "NON", 
-  "SI", "SINON", "SINON_SI","TANT_QUE", "RETOURNER", 
+  "SI", "SINON", "TANT_QUE", "RETOURNER", 
   "ECRIRE", "LIRE", 
   "VIRGULE", "POINT_VIRGULE", "PARENTHESE_OUVRANTE", "PARENTHESE_FERMANTE", "ACCOLADE_OUVRANTE", "ACCOLADE_FERMANTE"
 };
@@ -96,13 +95,13 @@ char *str_value[] =
   "+", "-", "*", "/", "%", 
   "==", "!=", "<", ">", "<=", ">=", 
   "et", "ou", "non", 
-  "si", "sinon", "sinon_si","tantque", "retourner", 
+  "si", "sinon", "tantque", "retourner", 
   "ecrire", "lire", 
   ",", ";", "(", ")", "{", "}"
 };
 
 
-int nbMotsClefs = 28;
+int nbMotsClefs = 27;
 
 void nom_token(int token, char *nom, char *valeur)
 {   

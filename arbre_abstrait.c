@@ -215,6 +215,14 @@ void afficher_n_instruction(n_instruction *instruction, int indent)
 
 /* Expressions */
 
+void afficher_n_variable(n_variable *variable, int indent)
+{
+	afficher("<variable>", indent);
+	afficher_identifiant(variable->identifiant, indent + 1);
+	afficher_type(variable->type, indent + 1);
+	afficher("</variable>", indent);
+}
+
 void afficher_entier(int valeur, int indent)
 {
 	for (int i = 0; i < indent; i++)
@@ -255,6 +263,10 @@ void afficher_n_exp(n_exp *exp, int indent)
 	{
 		afficher_n_appel_fonction(exp->u.appel_fonction, indent);
 	}
+	else if (exp->type_exp == i_variable)
+	{
+		afficher_n_variable(exp->u.variable, indent);
+	}
 }
 
 //
@@ -262,11 +274,16 @@ void afficher_n_exp(n_exp *exp, int indent)
 void afficher_n_operation(n_operation *operation, int indent)
 {
 	afficher("<operation>", indent);
-	afficher_n_exp(operation->exp1, indent + 1);
-	afficher_caractere(operation->type_operation, indent + 1);
 	if (operation->exp2 != NULL)
 	{
+		afficher_n_exp(operation->exp1, indent + 1);
+		afficher_caractere(operation->type_operation, indent + 1);
 		afficher_n_exp(operation->exp2, indent + 1);
+	}
+	else
+	{
+		afficher_caractere(operation->type_operation, indent + 1);
+		afficher_n_exp(operation->exp1, indent + 1);
 	}
 	afficher("</operation>", indent);
 }
@@ -277,6 +294,7 @@ void afficher_n_appel_fonction(n_appel_fonction *appel_fonction, int indent)
 {
 	afficher("<appel_fonction>", indent);
 
+	afficher_type(appel_fonction->type, indent + 1);
 	afficher_identifiant(appel_fonction->identifiant, indent + 1);
 	afficher_n_l_arguments(appel_fonction->arguments, indent + 1);
 
@@ -299,19 +317,10 @@ void afficher_n_l_arguments(n_l_arguments *arguments, int indent)
 	afficher("</liste_arguments>", indent);
 }
 
-void afficher_n_argument(n_argument *argument, int indent)
+void afficher_n_argument(n_exp *argument, int indent)
 {
 	afficher("<argument>", indent);
-
-	if (argument->type_arg == i_arg_var)
-	{
-		afficher_identifiant(argument->u.identifiant, indent + 1);
-	}
-	else if (argument->type_arg == i_arg_expr)
-	{
-		afficher_n_exp(argument->u.exp, indent + 1);
-	}
-
+	afficher_n_exp(argument, indent + 1);
 	afficher("</argument>", indent);
 }
 
@@ -333,7 +342,7 @@ n_programme *creer_n_programme(n_l_fonctions *fonctions, n_l_instructions *instr
 
 /* Déclaration de fonctions */
 
-n_l_fonctions *creer_n_l_fonctions(n_fonction *fonction, n_l_fonctions *fonctions)
+n_l_fonctions *creer_n_l_fonctions(n_l_fonctions *fonctions, n_fonction *fonction)
 {
 	n_l_fonctions *n = malloc(sizeof(n_l_fonctions));
 
@@ -508,7 +517,7 @@ n_exp *creer_n_operation(char type_operation, n_exp *exp1, n_exp *exp2)
 
 //
 
-n_exp *creer_n_appel_fonction(char *identifiant, n_l_arguments *arguments)
+n_exp *creer_n_appel_fonc_ent(char *identifiant, n_l_arguments *arguments)
 {
 	n_exp *n = malloc(sizeof(n_exp));
 	n->type_exp = i_appel_fonction;
@@ -516,10 +525,23 @@ n_exp *creer_n_appel_fonction(char *identifiant, n_l_arguments *arguments)
 	n->u.appel_fonction->identifiant = malloc(sizeof(char) * strlen(identifiant));
 	strcpy(n->u.appel_fonction->identifiant, identifiant);
 	n->u.appel_fonction->arguments = arguments;
+	n->u.appel_fonction->type = TYPE_ENTIER;
 	return n;
 }
 
-n_l_arguments *creer_n_l_arguments(n_argument *argument, n_l_arguments *arguments)
+n_exp *creer_n_appel_fonc_bool(char *identifiant, n_l_arguments *arguments)
+{
+	n_exp *n = malloc(sizeof(n_exp));
+	n->type_exp = i_appel_fonction;
+	n->u.appel_fonction = malloc(sizeof(n_appel_fonction));
+	n->u.appel_fonction->identifiant = malloc(sizeof(char) * strlen(identifiant));
+	strcpy(n->u.appel_fonction->identifiant, identifiant);
+	n->u.appel_fonction->arguments = arguments;
+	n->u.appel_fonction->type = TYPE_BOOLEEN;
+	return n;
+}
+
+n_l_arguments *creer_n_l_arguments(n_l_arguments *arguments, n_exp *argument)
 {
 	n_l_arguments *n = malloc(sizeof(n_l_arguments));
 	n->argument = argument;
@@ -527,20 +549,25 @@ n_l_arguments *creer_n_l_arguments(n_argument *argument, n_l_arguments *argument
 	return n;
 }
 
-n_argument *creer_n_argument_variable(char *identifiant)
+n_exp *creer_n_variable_entiere(char *identifiant)
 {
-	n_argument *n = malloc(sizeof(n_argument));
-	n->type_arg = i_arg_var;
-	n->u.identifiant = malloc(sizeof(char) * strlen(identifiant));
-	strcpy(n->u.identifiant, identifiant);
+	n_exp *n = malloc(sizeof(n_exp));
+	n->type_exp = i_variable;
+	n->u.variable = malloc(sizeof(n_variable));
+	n->u.variable->identifiant = malloc(sizeof(char) * (strlen(identifiant) + 1));
+	strcpy(n->u.variable->identifiant, identifiant);
+	n->u.variable->type = TYPE_ENTIER;
 	return n;
 }
 
-n_argument *creer_n_argument_expression(n_exp *exp)
+n_exp *creer_n_variable_booleenne(char *identifiant)
 {
-	n_argument *n = malloc(sizeof(n_argument));
-	n->type_arg = i_arg_expr;
-	n->u.exp = exp;
+	n_exp *n = malloc(sizeof(n_exp));
+	n->type_exp = i_variable;
+	n->u.variable = malloc(sizeof(n_variable));
+	n->u.variable->identifiant = malloc(sizeof(char) * (strlen(identifiant) + 1));
+	strcpy(n->u.variable->identifiant, identifiant);
+	n->u.variable->type = TYPE_BOOLEEN;
 	return n;
 }
 
