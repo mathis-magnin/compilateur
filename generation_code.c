@@ -208,6 +208,7 @@ void gen_operation(n_operation *n)
     gen_operation_booleenne(n);
     break;
 
+  /* opérations non implémentées */
   default:
     fprintf(stderr, "génération opération %d non implémenté\n", n->type_operation);
     exit(1);
@@ -219,15 +220,18 @@ void gen_operation_entiere(n_operation *n)
   switch (n->type_operation)
   {
   case '+':
-    arm_instruction("add", "r0", "r1", "r0", "effectue l'opération r0+r1 et met le résultat dans r0");
+    arm_instruction("add", "r0", "r1", "r0", "effectue l'opération r0+r1");
+    // le résultat est stocké dans r0
     arm_instruction("push", "{r0}", NULL, NULL, "empile le résultat");
     break;
   case '-':
-    arm_instruction("sub", "r0", "r0", "r1", "effectue l'opération r0-r1 et met le résultat dans r0");
+    arm_instruction("sub", "r0", "r0", "r1", "effectue l'opération r0-r1");
+    // le résultat est stocké dans r0
     arm_instruction("push", "{r0}", NULL, NULL, "empile le résultat");
     break;
   case '*':
-    arm_instruction("mul", "r0", "r1", "r0", "effectue l'opération r0*r1 et met le résultat dans r0");
+    arm_instruction("mul", "r0", "r1", "r0", "effectue l'opération r0*r1");
+    // le résultat est stocké dans r0
     arm_instruction("push", "{r0}", NULL, NULL, "empile le résultat");
     break;
   case '/':
@@ -241,69 +245,6 @@ void gen_operation_entiere(n_operation *n)
     arm_instruction("push", "{r1}", NULL, NULL, "empile le résultat");
     break;
   }
-}
-
-void gen_comparaison(n_operation *n)
-{
-  switch (n->type_operation)
-  {
-  case 'e':
-  case 'd':
-  case '<':
-  case '>':
-  case 'i':
-  case 's':
-  }
-}
-
-void gen_operation_booleenne(n_operation *n)
-{
-  switch (n->type_operation)
-  {
-  case '|':
-    arm_instruction("add", "r2", "r0", "r1", "effectue l'opération r0+r1 et met le résultat dans r2");
-    arm_instruction("cmp", "r2", "r2", "#0", "compare r2 à 0 (r2-0) et met le résultat dans r2");
-    arm_instruction("push", "{r2}", NULL, NULL, "empile le résultat");
-    break;
-  case '&':
-    arm_instruction("mul", "r0", "r0", "r1", "effectue l'opération (r0 et r1) et met le résultat dans r0");
-    arm_instruction("push", "{r0}", NULL, NULL, "empile le résultat");
-    break;
-  case '!':
-    arm_instruction("add", "r0", "r0", "#1", "effectue l'opération r0+1 et met le résultat dans r0");
-    // Charger r0
-    char buffer[12];
-    sprintf(buffer, "#%d", n->exp1->u.valeur);
-    arm_instruction("mov", "r0", buffer, NULL, NULL);
-    arm_instruction("push", "{r0}", NULL, NULL, NULL);
-    // Charger l'immédiat 2
-    char buffer2[12];
-    sprintf(buffer2, "#%d", 2);
-    arm_instruction("mov", "#2", buffer2, NULL, NULL);
-    arm_instruction("push", "{r1}", NULL, NULL, NULL);
-    // Appeler la fonction de modulo
-    arm_instruction("bl ", "__aeabi_idivmod", "", "", "");
-    // Le résultat est chargé dans r1
-    arm_instruction("push", "{r1}", NULL, NULL, "empile le résultat");
-    break;
-  }
-}
-
-int num_etiquette_courante = 0;
-void nouveau_nom_etiquette(char *etiq)
-{
-  sprintf(etiq, ".e%d", num_etiquette_courante++);
-}
-
-char *malloc_etiquette()
-{
-  int c = 0;
-  int number = num_etiquette_courante;
-  do
-  {
-    c++;
-  } while ((number /= 10) > 0);
-  return malloc(sizeof(char) * (c + 4));
 }
 
 void gen_comparaison(n_operation *n)
@@ -352,4 +293,61 @@ void gen_comparaison(n_operation *n)
 
   /* Fin */
   arm_instruction(strcat(etiquette_fin, ":"), NULL, NULL, NULL, "etiquette faux");
+}
+
+void gen_operation_booleenne(n_operation *n)
+{
+  switch (n->type_operation)
+  {
+  case '|':
+    arm_instruction("add", "r2", "r0", "r1", "effectue l'opération r0+r1");
+    // le résultat est stocké dans r2
+    arm_instruction("cmp", "r2", "r2", "#0", "compare r2 à 0 (r2-0)");
+    // le résultat est stocké dans r2
+    arm_instruction("push", "{r2}", NULL, NULL, "empile le résultat");
+    break;
+  case '&':
+    arm_instruction("mul", "r0", "r0", "r1", "effectue l'opération r0*r1");
+    // le résultat est stocké dans r0
+    arm_instruction("push", "{r0}", NULL, NULL, "empile le résultat");
+    break;
+  case '!':
+    arm_instruction("add", "r0", "r0", "#1", "effectue l'opération r0+#1");
+    // le résultat est stocké dans r0
+
+    /* Charger r0 */
+    char buffer[12];
+    sprintf(buffer, "#%d", n->exp1->u.valeur);
+    arm_instruction("mov", "r0", buffer, NULL, NULL);
+    arm_instruction("push", "{r0}", NULL, NULL, NULL);
+
+    /* Charger l'immédiat 2 */
+    char buffer2[12];
+    sprintf(buffer2, "#%d", 2);
+    arm_instruction("mov", "#2", buffer2, NULL, NULL);
+    arm_instruction("push", "{r1}", NULL, NULL, NULL);
+
+    // Appeler la fonction de modulo
+    arm_instruction("bl ", "__aeabi_idivmod", "", "", "");
+    // Le résultat est chargé dans r1
+    arm_instruction("push", "{r1}", NULL, NULL, "empile le résultat");
+    break;
+  }
+}
+
+int num_etiquette_courante = 0;
+void nouveau_nom_etiquette(char *etiq)
+{
+  sprintf(etiq, ".e%d", num_etiquette_courante++);
+}
+
+char *malloc_etiquette()
+{
+  int c = 0;
+  int number = num_etiquette_courante;
+  do
+  {
+    c++;
+  } while ((number /= 10) > 0);
+  return malloc(sizeof(char) * (c + 4));
 }
