@@ -134,7 +134,12 @@ typedef enum
   i_non
 } type_op;
 
-static const char type_op_value[] = {'+', '-', '*', '/', '%', 'e', 'd', '<', '>', 'i', 's', '|', '&', '!'};
+static const char type_op_value[] = 
+{
+  '+', '-', '*', '/', '%', 
+  'e', 'd', '<', '>', 'i', 's', 
+  '|', '&', '!'
+};
 
 struct n_operation
 {

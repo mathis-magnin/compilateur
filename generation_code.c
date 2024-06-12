@@ -47,7 +47,6 @@ void arm_instruction(char *opcode, char *op1, char *op2, char *op3, char *commen
 
 void gen_prog(n_programme *n)
 {
-
   // Déclaration de __aeabi_idiv
   asm(".global __aeabi_idiv");
   // Déclaration de __aeabi_idivmod
@@ -134,10 +133,16 @@ void gen_exp(n_exp *n)
 
 void gen_operation(n_operation *n)
 {
-  /* Vérification de type non fonctionnelle */
-  printf("type d'opération : %c\n", n->type_operation);
+  gen_exp(n->exp1); // on calcule et empile la valeur de exp1
+  gen_exp(n->exp2); // on calcule et empile la valeur de exp2
+  arm_instruction("pop", "{r1}", NULL, NULL, "dépile exp2 dans r1");
+  arm_instruction("pop", "{r0}", NULL, NULL, "dépile exp1 dans r0");
+
+  /* Vérification de type */
   switch (n->type_operation)
   {
+
+  /* opération arithmétiques */
   case '+':
   case '-':
   case '*':
@@ -150,10 +155,13 @@ void gen_operation(n_operation *n)
         printf("Premier morceau de l'expression : %c\n", n->exp1->u.operation->type_operation);
         printf("Second morceau de l'expression : %d\n", n->exp2->u.valeur);
         fprintf(stderr, "Erreur de typage, un booléen ou plus pour une opération entière");
-        return;
+        exit(1);
       }
     }
+    gen_operation_entiere(n);
     break;
+
+  /* opérations de comparaison */
   case 'e':
   case 'd':
     if (n->exp1->type_exp != i_operation && n->exp2->type_exp != i_operation)
@@ -163,9 +171,11 @@ void gen_operation(n_operation *n)
         printf("Premier morceau de l'expression : %c\n", n->exp1->u.operation->type_operation);
         printf("Second morceau de l'expression : %d\n", n->exp2->u.valeur);
         fprintf(stderr, "Erreur de typage, comparaison entre deux éléments de type différents");
-        return;
+        exit(1);
+        ;
       }
     }
+    gen_comparaison(n);
     break;
   case '<':
   case '>':
@@ -176,10 +186,14 @@ void gen_operation(n_operation *n)
       if (n->exp1->type_exp != i_entier || n->exp2->type_exp != i_entier)
       {
         fprintf(stderr, "Erreur de typage, comparaison d'ordre entre deux éléments de type différents");
-        return;
+        exit(1);
+        ;
       }
     }
+    gen_comparaison(n);
     break;
+
+  /* opérations booléennes */
   case '|':
   case '&':
   case '!':
@@ -188,48 +202,74 @@ void gen_operation(n_operation *n)
       if (n->exp1->type_exp != i_booleen || n->exp2->type_exp != i_booleen)
       {
         fprintf(stderr, "Erreur de typage, un entier ou plus pour une opération booléenne");
-        return;
+        exit(1);
       }
     }
+    gen_operation_booleenne(n);
+    break;
+
+  default:
+    fprintf(stderr, "génération opération %d non implémenté\n", n->type_operation);
+    exit(1);
+  }
+}
+
+void gen_operation_entiere(n_operation *n)
+{
+  switch (n->type_operation)
+  {
+  case '+':
+    arm_instruction("add", "r0", "r1", "r0", "effectue l'opération r0+r1 et met le résultat dans r0");
+    arm_instruction("push", "{r0}", NULL, NULL, "empile le résultat");
+    break;
+  case '-':
+    arm_instruction("sub", "r0", "r0", "r1", "effectue l'opération r0-r1 et met le résultat dans r0");
+    arm_instruction("push", "{r0}", NULL, NULL, "empile le résultat");
+    break;
+  case '*':
+    arm_instruction("mul", "r0", "r1", "r0", "effectue l'opération r0*r1 et met le résultat dans r0");
+    arm_instruction("push", "{r0}", NULL, NULL, "empile le résultat");
+    break;
+  case '/':
+    arm_instruction("bl ", "__aeabi_idiv", "", "", "");
+    // le résultat est stocké dans r0
+    arm_instruction("push", "{r0}", NULL, NULL, "empile le résultat");
+    break;
+  case '%':
+    arm_instruction("bl ", "__aeabi_idivmod", "", "", "");
+    // le résultat est stocké dans r1
+    arm_instruction("push", "{r1}", NULL, NULL, "empile le résultat");
     break;
   }
-  gen_exp(n->exp1); // on calcule et empile la valeur de exp1
-  gen_exp(n->exp2); // on calcule et empile la valeur de exp2
-  arm_instruction("pop", "{r1}", NULL, NULL, "dépile exp2 dans r1");
-  arm_instruction("pop", "{r0}", NULL, NULL, "dépile exp1 dans r0");
-  if (n->type_operation == '+')
+}
+
+void gen_comparaison(n_operation *n)
+{
+  switch (n->type_operation)
   {
-    arm_instruction("add", "r0", "r1", "r0", "effectue l'opération r0+r1 et met le résultat dans r0");
+  case 'e':
+  case 'd':
+  case '<':
+  case '>':
+  case 'i':
+  case 's':
   }
-  else if (n->type_operation == '-')
+}
+
+void gen_operation_booleenne(n_operation *n)
+{
+  switch (n->type_operation)
   {
-    arm_instruction("sub", "r0", "r0", "r1", "effectue l'opération r0-r1 et met le résultat dans r0");
-  }
-  else if (n->type_operation == '*')
-  {
-    arm_instruction("mul", "r0", "r1", "r0", "effectue l'opération r0*r1 et met le résultat dans r0");
-  }
-  else if (n->type_operation == '/')
-  {
-    arm_instruction("bl ", "__aeabi_idiv", "", "", "");
-  }
-  else if (n->type_operation == '%')
-  {
-    arm_instruction("bl ", "__aeabi_idivmod", "", "", "");
-  }
-  else if (n->type_operation == '|')
-  {
+  case '|':
     arm_instruction("add", "r2", "r0", "r1", "effectue l'opération r0+r1 et met le résultat dans r2");
     arm_instruction("cmp", "r2", "r2", "#0", "compare r2 à 0 (r2-0) et met le résultat dans r2");
-  }
-  else if (n->type_operation == '&')
-  {
+    arm_instruction("push", "{r2}", NULL, NULL, "empile le résultat");
+    break;
+  case '&':
     arm_instruction("mul", "r0", "r0", "r1", "effectue l'opération (r0 et r1) et met le résultat dans r0");
-  }
-  else if (n->type_operation == '!')
-  {
-    printf("exp1 == %d\n", n->exp1->u.valeur);
-    printf("exp2 == %d\n", n->exp2->u.valeur);
+    arm_instruction("push", "{r0}", NULL, NULL, "empile le résultat");
+    break;
+  case '!':
     arm_instruction("add", "r0", "r0", "#1", "effectue l'opération r0+1 et met le résultat dans r0");
     // Charger r0
     char buffer[12];
@@ -244,11 +284,72 @@ void gen_operation(n_operation *n)
     // Appeler la fonction de modulo
     arm_instruction("bl ", "__aeabi_idivmod", "", "", "");
     // Le résultat est chargé dans r1
+    arm_instruction("push", "{r1}", NULL, NULL, "empile le résultat");
+    break;
   }
-  else
+}
+
+int num_etiquette_courante = 0;
+void nouveau_nom_etiquette(char *etiq)
+{
+  sprintf(etiq, ".e%d", num_etiquette_courante++);
+}
+
+char *malloc_etiquette()
+{
+  int c = 0;
+  int number = num_etiquette_courante;
+  do
   {
-    fprintf(stderr, "génération opération %d non implémenté\n", n->type_operation);
-    exit(1);
+    c++;
+  } while ((number /= 10) > 0);
+  return malloc(sizeof(char) * (c + 4));
+}
+
+void gen_comparaison(n_operation *n)
+{
+  arm_instruction("cmp", "r0", "r1", NULL, "effectue l'opération de comparaison");
+
+  char *etiquette_vrai = malloc_etiquette();
+  char *etiquette_fin = malloc_etiquette();
+  nouveau_nom_etiquette(etiquette_vrai);
+  nouveau_nom_etiquette(etiquette_fin);
+
+  switch (n->type_operation)
+  {
+  case 'e':
+    arm_instruction("beq", etiquette_vrai, NULL, NULL, "déplace le compteur de programme à la partie vrai");
+    break;
+
+  case 'd':
+    arm_instruction("bne", etiquette_vrai, NULL, NULL, "déplace le compteur de programme à la partie vrai");
+    break;
+
+  case '<':
+    arm_instruction("blt", etiquette_vrai, NULL, NULL, "déplace le compteur de programme à la partie vrai");
+    break;
+
+  case '>':
+    arm_instruction("bgt", etiquette_vrai, NULL, NULL, "déplace le compteur de programme à la partie vrai");
+    break;
+
+  case 'i':
+    arm_instruction("ble", etiquette_vrai, NULL, NULL, "déplace le compteur de programme à la partie vrai");
+    break;
+
+  case 's':
+    arm_instruction("bge", etiquette_vrai, NULL, NULL, "déplace le compteur de programme à la partie vrai");
+    break;
   }
-  arm_instruction("push", "{r0}", NULL, NULL, "empile le résultat");
+
+  /* Faux */
+  arm_instruction("mov", "r0", "#0", NULL, "affecte 0 à r0");
+  arm_instruction("b", etiquette_fin, NULL, NULL, "déplace le compteur de programme à la partie fin");
+
+  /* Vrai */
+  arm_instruction(strcat(etiquette_vrai, ":"), NULL, NULL, NULL, "etiquette vrai");
+  arm_instruction("mov", "r0", "#1", NULL, "affecte 1 à r0");
+
+  /* Fin */
+  arm_instruction(strcat(etiquette_fin, ":"), NULL, NULL, NULL, "etiquette faux");
 }
