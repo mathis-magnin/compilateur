@@ -101,13 +101,6 @@ void gen_instruction(n_instruction *n)
     arm_instruction("ldr", "r0", "=.LC1", NULL, NULL);
     arm_instruction("bl", "printf", NULL, NULL, NULL); // on envoie la valeur de r1 sur la sortie standard
   }
-  else if (n->u.exp->type_exp == i_lire)
-  {
-    arm_instruction("ldr", "r0", "=.LC1", NULL, NULL);
-    arm_instruction("sub", "sp", "sp", "#4", "effectue l'opération sp-4 et stocke le résultat dans sp");
-    arm_instruction("mov", "r1", "sp", NULL, NULL);   // Copie l'adresse de sp dans r1
-    arm_instruction("bl", "scanf", NULL, NULL, NULL); // on récupère les infos de l'entrée standard
-  }
   else
   {
     fprintf(stderr, "génération type instruction non implémenté\n");
@@ -134,6 +127,15 @@ void gen_exp(n_exp *n)
     sprintf(buffer, "#%d", n->u.valeur);
     arm_instruction("mov", "r1", buffer, NULL, NULL);  // on met sur la pile la valeur booléenne (0 ou 1)
     arm_instruction("push", "{r1}", NULL, NULL, NULL); // on met sur la pile la valeur booléenne (0 ou 1)
+  }
+  else if (n->type_exp == i_lire)
+  {
+    arm_instruction("ldr", "r0", "=.LC1", NULL, NULL);
+    arm_instruction("sub", "sp", "sp", "#4", "effectue l'opération sp-4 et stocke le résultat dans sp");
+    arm_instruction("mov", "r1", "sp", NULL, NULL);   // Copie l'adresse de sp dans r1
+    arm_instruction("bl", "scanf", NULL, NULL, NULL); // on récupère les infos de l'entrée standard
+    arm_instruction("pop", "{r1}", NULL, NULL, "dépilé dans r1");
+    arm_instruction("push", "{r1}", NULL, NULL, NULL);
   }
   else
   {
