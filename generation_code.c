@@ -104,11 +104,10 @@ void gen_instruction(n_instruction *n)
   /* instruction lire non implémentée syntaxiquement */
   else if (n->type_instruction == i_lire)
   {
-    /*arm_instruction("ldr", "r0", "=.LC1", NULL, NULL);
+    arm_instruction("ldr", "r0", "=.LC1", NULL, NULL);
     arm_instruction("sub", "sp", "sp", "#4", "effectue l'opération sp-4 et stocke le résultat dans sp");
     arm_instruction("mov", "r1", "sp", NULL, NULL);   // Copie l'adresse de sp dans r1
     arm_instruction("bl", "scanf", NULL, NULL, NULL); // on récupère les infos de l'entrée standard
-    */
   }
   else
   {
