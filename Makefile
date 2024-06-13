@@ -18,3 +18,6 @@ analyse_syntaxique :
 
 analyse_lexicale:
 	flex -o analyse_lexicale.c analyse_lexicale.l
+
+table_des_symboles:
+	gcc -o table_des_symboles.c table_des_symboles.c

@@ -211,7 +211,6 @@ void afficher_n_parametre(n_parametre *parametre, int indent);
 
 void afficher_n_l_instructions(n_l_instructions *instructions, int indent);
 void afficher_n_instruction(n_instruction *instruction, int indent);
-
 void afficher_n_exp(n_exp *exp, int indent);
 void afficher_n_operation(n_operation *operation, int indent);
 void afficher_n_appel_fonction(n_appel_fonction *appel_fonction, int indent);

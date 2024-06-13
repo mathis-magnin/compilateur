@@ -45,9 +45,25 @@ void arm_instruction(char *opcode, char *op1, char *op2, char *op3, char *commen
   arm_comment(comment);
 }
 
+int num_etiquette_courante = 0;
+void nouveau_nom_etiquette(char *etiq)
+{
+  sprintf(etiq, ".e%d", num_etiquette_courante++);
+}
+
+char *malloc_etiquette()
+{
+  int c = 0;
+  int number = num_etiquette_courante;
+  do
+  {
+    c++;
+  } while ((number /= 10) > 0);
+  return malloc(sizeof(char) * (c + 4));
+}
+
 void gen_prog(n_programme *n)
 {
-
   printifm("%s", ".LC0:\n");
   printifm("%s", "	.ascii	\"%d\\000\"\n");
   printifm("%s", "	.align	2\n");
@@ -56,8 +72,8 @@ void gen_prog(n_programme *n)
   printifm("%s", "	.text\n");
   printifm("%s", "	.align	2\n");
   printifm("%s", "	.global	main\n");
-  printifm("%s", "main:\n")
-      arm_instruction("push", "{fp,lr}", NULL, NULL, NULL);
+  printifm("%s", "main:\n");
+  arm_instruction("push", "{fp,lr}", NULL, NULL, NULL);
   arm_instruction("add", "fp", "sp", "#4", NULL);
   gen_liste_instructions(n->instructions);
   arm_instruction("mov", "r0", "#0", NULL, NULL);
@@ -133,7 +149,13 @@ void gen_exp(n_exp *n)
     arm_instruction("push", "{r1}", NULL, NULL, NULL); // on met sur la pile la valeur booléenne
     break;
 
-    // case i_lire:
+  case i_lire:
+    arm_instruction("ldr", "r0", "=.LC1", NULL, NULL);
+    arm_instruction("sub", "sp", "sp", "#4", "effectue l'opération sp-4 et stocke le résultat dans sp");
+    arm_instruction("mov", "r1", "sp", NULL, NULL);   // Copie l'adresse de sp dans r1
+    arm_instruction("bl", "scanf", NULL, NULL, NULL); // on récupère les infos de l'entrée standard
+    break;
+
     // case i_appel_fonction:
     // case i_variable:
 
@@ -144,91 +166,41 @@ void gen_exp(n_exp *n)
   }
 }
 
-void gen_operation(n_operation *n)
-{
-  gen_exp(n->exp1); // on calcule et empile la valeur de exp1
-  gen_exp(n->exp2); // on calcule et empile la valeur de exp2
-  arm_instruction("pop", "{r1}", NULL, NULL, "dépile exp2 dans r1");
-  arm_instruction("pop", "{r0}", NULL, NULL, "dépile exp1 dans r0");
-
-  switch (n->type_operation)
-  {
-  case '+':
-  case '-':
-  case '*':
-  case '/':
-  case '%':
-    gen_operation_entiere(n);
-    break;
-
-  case 'e':
-  case 'd':
-  case '<':
-  case '>':
-  case 'i':
-  case 's':
-    gen_comparaison(n);
-    break;
-
-  case '|':
-  case '&':
-  case '!':
-    fprintf(stderr, "génération opératon %d non implémenté\n", n->type_operation);
-    exit(1);
-    break;
-  }
-
-  arm_instruction("push", "{r0}", NULL, NULL, "empile le résultat");
-}
-
-//
-
 void gen_operation_entiere(n_operation *n)
 {
+
+  // Déclaration de __aeabi_idiv
+  asm(".global __aeabi_idiv");
+  // Déclaration de __aeabi_idivmod
+  asm(".global __aeabi_idivmod");
   switch (n->type_operation)
   {
   case '+':
-    arm_instruction("add", "r0", "r1", "r0", "effectue l'opération r0+r1 et met le résultat dans r0");
+    arm_instruction("add", "r0", "r1", "r0", "effectue l'opération r0+r1");
+    // le résultat est stocké dans r0
+    arm_instruction("push", "{r0}", NULL, NULL, "empile le résultat");
     break;
-
-    // case '-':
-    //   break;
-
+  case '-':
+    arm_instruction("sub", "r0", "r0", "r1", "effectue l'opération r0-r1");
+    // le résultat est stocké dans r0
+    arm_instruction("push", "{r0}", NULL, NULL, "empile le résultat");
+    break;
   case '*':
-    arm_instruction("mul", "r0", "r1", "r0", "effectue l'opération r0*r1 et met le résultat dans r0");
+    arm_instruction("mul", "r0", "r1", "r0", "effectue l'opération r0*r1");
+    // le résultat est stocké dans r0
+    arm_instruction("push", "{r0}", NULL, NULL, "empile le résultat");
     break;
-
-    // case '/':
-    //   break;
-
-    // case '%':
-    //   break;
-
-  default:
-    fprintf(stderr, "génération opératon %d non implémenté\n", n->type_operation);
-    exit(1);
+  case '/':
+    arm_instruction("bl ", "__aeabi_idiv", NULL, NULL, "");
+    // le résultat est stocké dans r0
+    arm_instruction("push", "{r0}", NULL, NULL, "empile le résultat");
+    break;
+  case '%':
+    arm_instruction("bl ", "__aeabi_idivmod", NULL, NULL, "");
+    // le résultat est stocké dans r1
+    arm_instruction("push", "{r1}", NULL, NULL, "empile le résultat");
+    break;
   }
-}
-
-//
-
-int num_etiquette_courante = 0;
-void nouveau_nom_etiquette(char *etiq)
-{
-  sprintf(etiq, ".e%d", num_etiquette_courante++);
-}
-
-//
-
-char *malloc_etiquette()
-{
-  int c = 0;
-  int number = num_etiquette_courante;
-  do
-  {
-    c++;
-  } while ((number /= 10) > 0);
-  return malloc(sizeof(char) * (c + 4));
 }
 
 void gen_comparaison(n_operation *n)
@@ -358,4 +330,187 @@ void gen_tant_que(n_instr_cond *n)
 
   /* Fin */
   arm_instruction(strcat(etiquette_fin, ":"), NULL, NULL, NULL, "etiquette fin");
+}
+
+void gen_operation_booleenne(n_operation *n)
+{
+  char *etiquette_vrai = malloc_etiquette();
+  char *etiquette_fin = malloc_etiquette();
+  nouveau_nom_etiquette(etiquette_vrai);
+  nouveau_nom_etiquette(etiquette_fin);
+
+  // Déclaration de __aeabi_idivmod
+  asm(".global __aeabi_idivmod");
+
+  switch (n->type_operation)
+  {
+  case '|':
+    arm_instruction("add", "r0", "r0", "r1", "effectue l'opération r0+r1");
+    // le résultat est stocké dans r0
+    arm_instruction("push", "{r0}", NULL, NULL, "empile le résultat");
+    arm_instruction("pop", "{r0}", NULL, NULL, "dépile dans r0");
+    arm_instruction("cmp", "r0", "#1", NULL, "compare r0 à 1 (r0-1)");
+    // le résultat est stocké dans r0
+    arm_instruction("push", "{r0}", NULL, NULL, "empile le résultat");
+    arm_instruction("pop", "{r0}", NULL, NULL, "dépile dans r0");
+    // si le résultat de la comparaison est strictement négatif
+    arm_instruction("movlt", "r0", "#0", NULL, "si le résultat est strictement négatif, affecte 0 à r0");
+    // si le résultat de la comparaison est supérieur ou égal à 0
+    arm_instruction("movge", "r0", "#1", NULL, "sinon, affecte 1 à r0");
+    arm_instruction("push", "{r0}", NULL, NULL, "empile le résultat");
+    break;
+  case '&':
+    arm_instruction("mul", "r0", "r0", "r1", "effectue l'opération r0*r1");
+    // le résultat est stocké dans r0
+    arm_instruction("push", "{r0}", NULL, NULL, "empile le résultat");
+    break;
+  case '!':
+    arm_instruction("eor", "r0", "r0", "#1", "effectue l'opération r0 XOR #1");
+    // le résultat est stocké dans r0
+    arm_instruction("push", "{r0}", NULL, NULL, "empile le résultat");
+    break;
+  }
+}
+
+void gen_operation(n_operation *n)
+{
+  if (n->exp1 != NULL)
+  {
+    gen_exp(n->exp1); // on calcule et empile la valeur de exp1
+  }
+  if (n->exp2 != NULL)
+  {
+    gen_exp(n->exp2); // on calcule et empile la valeur de exp2
+    arm_instruction("pop", "{r1}", NULL, NULL, "dépile exp2 dans r1");
+  }
+  if (n->exp1 != NULL)
+  {
+    // ici core dumped lors d'un appel à not
+    arm_instruction("pop", "{r0}", NULL, NULL, "dépile exp1 dans r0");
+  }
+
+  /* Vérification de type */
+  switch (n->type_operation)
+  {
+
+  /* opération arithmétiques */
+  case '+':
+  case '-':
+  case '*':
+  case '/':
+  case '%':
+    if (n->exp1 == NULL || n->exp2 == NULL)
+    {
+      fprintf(stderr, "L'une des deux opérandes est NULL");
+      exit(1);
+      return;
+    }
+    else
+    {
+      if (n->exp1->type_exp != i_operation && n->exp2->type_exp != i_operation)
+      {
+        if (n->exp1->type_exp != i_entier || n->exp2->type_exp != i_entier)
+        {
+          fprintf(stderr, "Premier morceau de l'expression : %c\n", n->exp1->u.operation->type_operation);
+          fprintf(stderr, "Second morceau de l'expression : %d\n", n->exp2->u.valeur);
+          fprintf(stderr, "Erreur de typage, un booléen ou plus pour une opération entière");
+          exit(1);
+          return;
+        }
+      }
+    }
+
+    gen_operation_entiere(n);
+    break;
+
+  /* opérations de comparaison */
+  case 'e':
+  case 'd':
+    if (n->exp1 == NULL || n->exp2 == NULL)
+    {
+      fprintf(stderr, "L'une des deux opérandes est NULL");
+      exit(1);
+      return;
+    }
+    else
+    {
+      if (n->exp1->type_exp != i_operation && n->exp2->type_exp != i_operation)
+      {
+        if (n->exp1->type_exp != n->exp2->type_exp)
+        {
+          fprintf(stderr, "Premier morceau de l'expression : %c\n", n->exp1->u.operation->type_operation);
+          fprintf(stderr, "Second morceau de l'expression : %d\n", n->exp2->u.valeur);
+          fprintf(stderr, "Erreur de typage, comparaison entre deux éléments de type différents");
+          exit(1);
+          return;
+        }
+      }
+    }
+
+    gen_comparaison(n);
+    break;
+  case '<':
+  case '>':
+  case 'i':
+  case 's':
+    if (n->exp1 == NULL || n->exp2 == NULL)
+    {
+      fprintf(stderr, "L'une des deux opérandes est NULL");
+      exit(1);
+      return;
+    }
+    else
+    {
+      if (n->exp1->type_exp != i_operation && n->exp2->type_exp != i_operation)
+      {
+        if (n->exp1->type_exp != i_entier || n->exp2->type_exp != i_entier)
+        {
+          fprintf(stderr, "Erreur de typage, comparaison d'ordre entre deux éléments de type différents");
+          exit(1);
+          return;
+        }
+      }
+    }
+
+    gen_comparaison(n);
+    break;
+
+  /* opérations booléennes */
+  case '|':
+  case '&':
+    if (n->exp1 == NULL || n->exp2 == NULL)
+    {
+      fprintf(stderr, "L'une des deux opérandes est NULL");
+      exit(1);
+      return;
+    }
+    else
+    {
+      if (n->exp1->type_exp != i_operation && n->exp2->type_exp != i_operation)
+      {
+        if (n->exp1->type_exp != i_booleen || n->exp2->type_exp != i_booleen)
+        {
+          fprintf(stderr, "Erreur de typage, un entier ou plus pour une opération booléenne");
+          exit(1);
+          return;
+        }
+      }
+    }
+    gen_operation_booleenne(n);
+    break;
+  case '!':
+    if (n->exp1 == NULL || (n->exp1 != NULL && n->exp2 != NULL))
+    {
+      fprintf(stderr, "Argumentation invalide");
+      exit(1);
+      return;
+    }
+    gen_operation_booleenne(n);
+    break;
+
+  /* opérations non implémentées */
+  default:
+    fprintf(stderr, "génération opération %d non implémenté\n", n->type_operation);
+    exit(1);
+  }
 }
