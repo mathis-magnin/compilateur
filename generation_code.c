@@ -64,11 +64,6 @@ char *malloc_etiquette()
 
 void gen_prog(n_programme *n)
 {
-  // Déclaration de __aeabi_idiv
-  asm(".global __aeabi_idiv");
-  // Déclaration de __aeabi_idivmod
-  asm(".global __aeabi_idivmod");
-
   printifm("%s", ".LC0:\n");
   printifm("%s", "	.ascii	\"%d\\000\"\n");
   printifm("%s", "	.align	2\n");
@@ -150,6 +145,11 @@ void gen_exp(n_exp *n)
 
 void gen_operation_entiere(n_operation *n)
 {
+
+  // Déclaration de __aeabi_idiv
+  asm(".global __aeabi_idiv");
+  // Déclaration de __aeabi_idivmod
+  asm(".global __aeabi_idivmod");
   switch (n->type_operation)
   {
   case '+':
@@ -168,12 +168,12 @@ void gen_operation_entiere(n_operation *n)
     arm_instruction("push", "{r0}", NULL, NULL, "empile le résultat");
     break;
   case '/':
-    arm_instruction("bl ", "__aeabi_idiv", "", "", "");
+    arm_instruction("bl ", "__aeabi_idiv", NULL, NULL, "");
     // le résultat est stocké dans r0
     arm_instruction("push", "{r0}", NULL, NULL, "empile le résultat");
     break;
   case '%':
-    arm_instruction("bl ", "__aeabi_idivmod", "", "", "");
+    arm_instruction("bl ", "__aeabi_idivmod", NULL, NULL, "");
     // le résultat est stocké dans r1
     arm_instruction("push", "{r1}", NULL, NULL, "empile le résultat");
     break;
@@ -235,15 +235,25 @@ void gen_operation_booleenne(n_operation *n)
   nouveau_nom_etiquette(etiquette_vrai);
   nouveau_nom_etiquette(etiquette_fin);
 
+  // Déclaration de __aeabi_idivmod
+  asm(".global __aeabi_idivmod");
+
   switch (n->type_operation)
   {
   case '|':
-    arm_instruction("add", "r2", "r0", "r1", "effectue l'opération r0+r1");
-    // le résultat est stocké dans r2
-    arm_instruction("cmp", "r2", "r2", "#1", "compare r2 à 1 (r2-1)");
-    // le résultat est stocké dans r2
-    arm_instruction("blt", etiquette_fin, NULL, NULL, "déplace le compteur de programme à la partie fin");
-    arm_instruction("bge", etiquette_vrai, NULL, NULL, "déplace la compteur de programme à la partie vraie");
+    arm_instruction("add", "r0", "r0", "r1", "effectue l'opération r0+r1");
+    // le résultat est stocké dans r0
+    arm_instruction("push", "{r0}", NULL, NULL, "empile le résultat");
+    arm_instruction("pop", "{r0}", NULL, NULL, "dépile dans r0");
+    arm_instruction("cmp", "r0", "#1", NULL, "compare r0 à 1 (r0-1)");
+    // le résultat est stocké dans r0
+    arm_instruction("push", "{r0}", NULL, NULL, "empile le résultat");
+    arm_instruction("pop", "{r0}", NULL, NULL, "dépile dans r0");
+    // si le résultat de la comparaison est strictement négatif
+    arm_instruction("movlt", "r0", "#0", NULL, "si le résultat est strictement négatif, affecte 0 à r0");
+    // si le résultat de la comparaison est supérieur ou égal à 0
+    arm_instruction("movge", "r0", "#1", NULL, "sinon, affecte 1 à r0");
+    arm_instruction("push", "{r0}", NULL, NULL, "empile le résultat");
     break;
   case '&':
     arm_instruction("mul", "r0", "r0", "r1", "effectue l'opération r0*r1");
@@ -267,22 +277,22 @@ void gen_operation_booleenne(n_operation *n)
     arm_instruction("push", "{r1}", NULL, NULL, NULL);
 
     // Appeler la fonction de modulo
-    arm_instruction("bl ", "__aeabi_idivmod", "", "", "");
+    arm_instruction("bl ", "__aeabi_idivmod", NULL, NULL, "");
     // Le résultat est chargé dans r1
     arm_instruction("push", "{r1}", NULL, NULL, "empile le résultat");
     break;
   }
 
   /* Faux */
-  arm_instruction("mov", "r0", "#0", NULL, "affecte 0 à r0");
-  arm_instruction("b", etiquette_fin, NULL, NULL, "déplace le compteur de programme à la partie fin");
+  /*arm_instruction("mov", "r0", "#0", NULL, "affecte 0 à r0");
+  arm_instruction("b", etiquette_fin, NULL, NULL, "déplace le compteur de programme à la partie fin");*/
 
   /* Vrai */
-  arm_instruction(strcat(etiquette_vrai, ":"), NULL, NULL, NULL, "etiquette vrai");
-  arm_instruction("mov", "r0", "#1", NULL, "affecte 1 à r0");
+  /*arm_instruction(strcat(etiquette_vrai, ":"), NULL, NULL, NULL, "etiquette vrai");
+  arm_instruction("mov", "r0", "#1", NULL, "affecte 1 à r0");*/
 
   /* Fin */
-  arm_instruction(strcat(etiquette_fin, ":"), NULL, NULL, NULL, "etiquette faux");
+  /*arm_instruction(strcat(etiquette_fin, ":"), NULL, NULL, NULL, "etiquette faux");*/
 }
 
 void gen_operation(n_operation *n)

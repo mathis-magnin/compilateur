@@ -23,7 +23,7 @@ main:
 	push	{r0}		 @ empile le résultat
 	pop	{r1}		 @ dépile exp2 dans r1
 	pop	{r0}		 @ dépile exp1 dans r0
-	bl 	__aeabi_idivmod, , 		 @ 
+	bl 	__aeabi_idivmod		 @ 
 	push	{r1}		 @ empile le résultat
 	pop	{r1}		 @ dépile exp2 dans r1
 	pop	{r0}		 @ dépile exp1 dans r0

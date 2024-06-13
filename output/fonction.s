@@ -15,15 +15,15 @@ main:
 	push	{r1}
 	pop	{r1}		 @ dépile exp2 dans r1
 	pop	{r0}		 @ dépile exp1 dans r0
-	add	r2, r0, r1		 @ effectue l'opération r0+r1
-	cmp	r2, r2, #1		 @ compare r2 à 1 (r2-1)
-	blt	.e1		 @ déplace le compteur de programme à la partie fin
-	bge	.e0		 @ déplace la compteur de programme à la partie vraie
-	mov	r0, #0		 @ affecte 0 à r0
-	b	.e1		 @ déplace le compteur de programme à la partie fin
-	.e0:		 @ etiquette vrai
-	mov	r0, #1		 @ affecte 1 à r0
-	.e1:		 @ etiquette faux
+	add	r0, r0, r1		 @ effectue l'opération r0+r1
+	push	{r0}		 @ empile le résultat
+	pop	{r0}		 @ dépile dans r0
+	cmp	r0, #1		 @ compare r0 à 1 (r0-1)
+	push	{r0}		 @ empile le résultat
+	pop	{r0}		 @ dépile dans r0
+	movlt	r0, #0		 @ si le résultat est strictement négatif, affecte 0 à r0
+	movge	r0, #1		 @ sinon, affecte 1 à r0
+	push	{r0}		 @ empile le résultat
 	pop	{r1}
 	ldr	r0, =.LC1
 	bl	printf
