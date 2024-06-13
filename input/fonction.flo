@@ -1,5 +1,6 @@
 entier vroum(entier voiture, booleen rapide) {
     ecrire(4 * 8);
+    a = lire();
 }
 
 ecrire(Vrai ou Faux);
