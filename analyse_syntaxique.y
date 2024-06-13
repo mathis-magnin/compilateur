@@ -3,6 +3,11 @@
 #include <stdio.h>
 #include "arbre_abstrait.h"
 #include "analyse_lexicale.h"
+#include "table_des_symboles.h"
+
+extern TableSymboles *table_symboles; // Déclaration de la table des symboles
+extern void ajouter_fonction(TableSymboles *table, const char *nom, type type);
+
 
 
 //n_programme* yyparse();
@@ -116,7 +121,12 @@ n_programme* arbre_abstrait;
 %type <l_arguments> listeArguments
 */
 
+%{
+TableSymboles *table_symboles = NULL; // Initialisation de la table des symboles globale
+%}
+
 %%
+
 
 prog: listeFonctions listeInstructions {
     arbre_abstrait = creer_n_programme($1, $2);
@@ -141,10 +151,12 @@ listeFonctions: listeFonctions fonction {
 
 fonction: TYPE IDENTIFIANT PARENTHESE_OUVRANTE listeParametres PARENTHESE_FERMANTE ACCOLADE_OUVRANTE listeInstructions ACCOLADE_FERMANTE { // type
     $$ = creer_n_fonction($1, $2, $4, $7);
+    ajouter_fonction(table_symboles, $2, $1); // Ajouter la fonction à la table des symboles
 }
 
 fonction: TYPE IDENTIFIANT PARENTHESE_OUVRANTE PARENTHESE_FERMANTE ACCOLADE_OUVRANTE listeInstructions ACCOLADE_FERMANTE {
     $$ = creer_n_fonction($1, $2, NULL, $6);
+    ajouter_fonction(table_symboles, $2, $1); // Ajouter la fonction à la table des symboles
 }
 
 
@@ -198,6 +210,10 @@ instruction_base: TYPE IDENTIFIANT declaration {
 }
 
 instruction_base: IDENTIFIANT AFFECTATION expr {
+    if (!fonction_existe(table_symboles, $1)) {
+        fprintf(stderr, "Erreur : Identifiant %s non déclaré\n", $1);
+        exit(1);
+    }
     $$ = creer_n_affectation($1, $3);
 }
 

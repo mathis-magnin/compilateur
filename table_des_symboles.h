@@ -1,15 +1,12 @@
 #ifndef TABLE_DES_SYMBOLES_H
 #define TABLE_DES_SYMBOLES_H
 
-typedef enum
-{
-    FONCTION_ENTIER,
-    FONCTION_BOOLEEN
-} TypeRetour;
+#include "arbre_abstrait.h" // Inclure arbre_abstrait.h pour la définition de type
+
 typedef struct
 {
     char *nom;
-    TypeRetour type;
+    type type_retour; // Utilisation du type défini dans arbre_abstrait.h
 } Fonction;
 
 typedef struct
@@ -20,8 +17,8 @@ typedef struct
 } TableSymboles;
 
 TableSymboles *creer_table_symboles();
-void ajouter_fonction(TableSymboles *table, const char *nom, TypeRetour type);
-TypeRetour obtenir_type_fonction(TableSymboles *table, const char *nom);
+void ajouter_fonction(TableSymboles *table, const char *nom, type type_retour);
+type obtenir_type_fonction(TableSymboles *table, const char *nom);
 int fonction_existe(TableSymboles *table, const char *nom);
 void liberer_table_symboles(TableSymboles *table);
 

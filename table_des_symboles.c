@@ -14,7 +14,7 @@ TableSymboles *creer_table_symboles()
     return table;
 }
 
-void ajouter_fonction(TableSymboles *table, const char *nom, TypeRetour type)
+void ajouter_fonction(TableSymboles *table, const char *nom, type type_retour)
 {
     if (table->taille >= table->capacite)
     {
@@ -22,17 +22,17 @@ void ajouter_fonction(TableSymboles *table, const char *nom, TypeRetour type)
         table->fonctions = (Fonction *)realloc(table->fonctions, table->capacite * sizeof(Fonction));
     }
     table->fonctions[table->taille].nom = strdup(nom);
-    table->fonctions[table->taille].type = type;
+    table->fonctions[table->taille].type_retour = type_retour;
     table->taille++;
 }
 
-TypeRetour obtenir_type_fonction(TableSymboles *table, const char *nom)
+type obtenir_type_fonction(TableSymboles *table, const char *nom)
 {
     for (int i = 0; i < table->taille; i++)
     {
         if (strcmp(table->fonctions[i].nom, nom) == 0)
         {
-            return table->fonctions[i].type;
+            return table->fonctions[i].type_retour;
         }
     }
     fprintf(stderr, "Erreur : Fonction %s non trouvée\n", nom);
