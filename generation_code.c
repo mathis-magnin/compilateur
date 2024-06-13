@@ -446,6 +446,7 @@ void gen_comparaison(n_operation *n)
 
   /* Fin */
   arm_instruction(strcat(etiquette_fin, ":"), NULL, NULL, NULL, "etiquette fin");
+  arm_instruction("push", "{r0}", NULL, NULL, "empile le resultat de la comparaison");
 }
 
 /* Instructions conditionelles */
