@@ -87,7 +87,8 @@ struct n_instruction
 {
   enum
   {
-    i_ecrire
+    i_ecrire,
+    i_lire
   } type_instruction; // pour le moment une instruction peut-être uniquement de type écrire. Il faudra ajouter affectation, exécution de fonction, si,sinon, etc...
   union
   {
@@ -134,12 +135,11 @@ typedef enum
   i_non
 } type_op;
 
-static const char type_op_value[] = 
-{
-  '+', '-', '*', '/', '%', 
-  'e', 'd', '<', '>', 'i', 's', 
-  '|', '&', '!'
-};
+static const char type_op_value[] =
+    {
+        '+', '-', '*', '/', '%',
+        'e', 'd', '<', '>', 'i', 's',
+        '|', '&', '!'};
 
 struct n_operation
 {

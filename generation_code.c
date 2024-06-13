@@ -45,6 +45,23 @@ void arm_instruction(char *opcode, char *op1, char *op2, char *op3, char *commen
   arm_comment(comment);
 }
 
+int num_etiquette_courante = 0;
+void nouveau_nom_etiquette(char *etiq)
+{
+  sprintf(etiq, ".e%d", num_etiquette_courante++);
+}
+
+char *malloc_etiquette()
+{
+  int c = 0;
+  int number = num_etiquette_courante;
+  do
+  {
+    c++;
+  } while ((number /= 10) > 0);
+  return malloc(sizeof(char) * (c + 4));
+}
+
 void gen_prog(n_programme *n)
 {
   // Déclaration de __aeabi_idiv
@@ -89,14 +106,14 @@ void gen_instruction(n_instruction *n)
     arm_instruction("ldr", "r0", "=.LC1", NULL, NULL);
     arm_instruction("bl", "printf", NULL, NULL, NULL); // on envoie la valeur de r1 sur la sortie standard
   }
-  /* instruction lire non implémentée syntaxiquement
+  /* instruction lire non implémentée syntaxiquement */
   else if (n->type_instruction == i_lire)
   {
     arm_instruction("ldr", "r0", "=.LC1", NULL, NULL);
     arm_instruction("sub", "sp", "sp", "#4", "effectue l'opération sp-4 et stocke le résultat dans sp");
     arm_instruction("mov", "r1", "sp", NULL, NULL);   // Copie l'adresse de sp dans r1
     arm_instruction("bl", "scanf", NULL, NULL, NULL); // on récupère les infos de l'entrée standard
-  }*/
+  }
   else
   {
     fprintf(stderr, "génération type instruction non implémenté\n");
@@ -127,90 +144,6 @@ void gen_exp(n_exp *n)
   else
   {
     fprintf(stderr, "génération type expression non implémenté\n");
-    exit(1);
-  }
-}
-
-void gen_operation(n_operation *n)
-{
-  gen_exp(n->exp1); // on calcule et empile la valeur de exp1
-  gen_exp(n->exp2); // on calcule et empile la valeur de exp2
-  arm_instruction("pop", "{r1}", NULL, NULL, "dépile exp2 dans r1");
-  arm_instruction("pop", "{r0}", NULL, NULL, "dépile exp1 dans r0");
-
-  /* Vérification de type */
-  switch (n->type_operation)
-  {
-
-  /* opération arithmétiques */
-  case '+':
-  case '-':
-  case '*':
-  case '/':
-  case '%':
-    if (n->exp1->type_exp != i_operation && n->exp2->type_exp != i_operation)
-    {
-      if (n->exp1->type_exp != i_entier || n->exp2->type_exp != i_entier)
-      {
-        printf("Premier morceau de l'expression : %c\n", n->exp1->u.operation->type_operation);
-        printf("Second morceau de l'expression : %d\n", n->exp2->u.valeur);
-        fprintf(stderr, "Erreur de typage, un booléen ou plus pour une opération entière");
-        exit(1);
-      }
-    }
-    gen_operation_entiere(n);
-    break;
-
-  /* opérations de comparaison */
-  case 'e':
-  case 'd':
-    if (n->exp1->type_exp != i_operation && n->exp2->type_exp != i_operation)
-    {
-      if (n->exp1->type_exp != n->exp2->type_exp)
-      {
-        printf("Premier morceau de l'expression : %c\n", n->exp1->u.operation->type_operation);
-        printf("Second morceau de l'expression : %d\n", n->exp2->u.valeur);
-        fprintf(stderr, "Erreur de typage, comparaison entre deux éléments de type différents");
-        exit(1);
-        ;
-      }
-    }
-    gen_comparaison(n);
-    break;
-  case '<':
-  case '>':
-  case 'i':
-  case 's':
-    if (n->exp1->type_exp != i_operation && n->exp2->type_exp != i_operation)
-    {
-      if (n->exp1->type_exp != i_entier || n->exp2->type_exp != i_entier)
-      {
-        fprintf(stderr, "Erreur de typage, comparaison d'ordre entre deux éléments de type différents");
-        exit(1);
-        ;
-      }
-    }
-    gen_comparaison(n);
-    break;
-
-  /* opérations booléennes */
-  case '|':
-  case '&':
-  case '!':
-    if (n->exp1->type_exp != i_operation && n->exp2->type_exp != i_operation)
-    {
-      if (n->exp1->type_exp != i_booleen || n->exp2->type_exp != i_booleen)
-      {
-        fprintf(stderr, "Erreur de typage, un entier ou plus pour une opération booléenne");
-        exit(1);
-      }
-    }
-    gen_operation_booleenne(n);
-    break;
-
-  /* opérations non implémentées */
-  default:
-    fprintf(stderr, "génération opération %d non implémenté\n", n->type_operation);
     exit(1);
   }
 }
@@ -335,19 +268,160 @@ void gen_operation_booleenne(n_operation *n)
   }
 }
 
-int num_etiquette_courante = 0;
-void nouveau_nom_etiquette(char *etiq)
+void gen_operation(n_operation *n)
 {
-  sprintf(etiq, ".e%d", num_etiquette_courante++);
-}
-
-char *malloc_etiquette()
-{
-  int c = 0;
-  int number = num_etiquette_courante;
-  do
+  if (n->exp1 != NULL)
   {
-    c++;
-  } while ((number /= 10) > 0);
-  return malloc(sizeof(char) * (c + 4));
+    gen_exp(n->exp1); // on calcule et empile la valeur de exp1
+  }
+  if (n->exp2 != NULL)
+  {
+    gen_exp(n->exp2); // on calcule et empile la valeur de exp2
+    arm_instruction("pop", "{r1}", NULL, NULL, "dépile exp2 dans r1");
+  }
+  if (n->exp1 != NULL)
+  {
+    // ici core dumped lors d'un appel à not
+    arm_instruction("pop", "{r0}", NULL, NULL, "dépile exp1 dans r0");
+  }
+
+  /* Vérification de type */
+  switch (n->type_operation)
+  {
+
+  /* opération arithmétiques */
+  case '+':
+  case '-':
+  case '*':
+  case '/':
+  case '%':
+    if (n->exp1 == NULL || n->exp2 == NULL)
+    {
+      fprintf(stderr, "L'une des deux opérandes est NULL");
+      exit(1);
+      return;
+    }
+    else
+    {
+      if (n->exp1->type_exp != i_operation && n->exp2->type_exp != i_operation)
+      {
+        if (n->exp1->type_exp != i_entier || n->exp2->type_exp != i_entier)
+        {
+          fprintf(stderr, "Premier morceau de l'expression : %c\n", n->exp1->u.operation->type_operation);
+          fprintf(stderr, "Second morceau de l'expression : %d\n", n->exp2->u.valeur);
+          fprintf(stderr, "Erreur de typage, un booléen ou plus pour une opération entière");
+          exit(1);
+          return;
+        }
+      }
+    }
+
+    gen_operation_entiere(n);
+    break;
+
+  /* opérations de comparaison */
+  case 'e':
+  case 'd':
+    if (n->exp1 == NULL || n->exp2 == NULL)
+    {
+      fprintf(stderr, "L'une des deux opérandes est NULL");
+      exit(1);
+      return;
+    }
+    else
+    {
+      if (n->exp1->type_exp != i_operation && n->exp2->type_exp != i_operation)
+      {
+        if (n->exp1->type_exp != n->exp2->type_exp)
+        {
+          fprintf(stderr, "Premier morceau de l'expression : %c\n", n->exp1->u.operation->type_operation);
+          fprintf(stderr, "Second morceau de l'expression : %d\n", n->exp2->u.valeur);
+          fprintf(stderr, "Erreur de typage, comparaison entre deux éléments de type différents");
+          exit(1);
+          return;
+        }
+      }
+    }
+
+    gen_comparaison(n);
+    break;
+  case '<':
+  case '>':
+  case 'i':
+  case 's':
+    if (n->exp1 == NULL || n->exp2 == NULL)
+    {
+      fprintf(stderr, "L'une des deux opérandes est NULL");
+      exit(1);
+      return;
+    }
+    else
+    {
+      if (n->exp1->type_exp != i_operation && n->exp2->type_exp != i_operation)
+      {
+        if (n->exp1->type_exp != i_entier || n->exp2->type_exp != i_entier)
+        {
+          fprintf(stderr, "Erreur de typage, comparaison d'ordre entre deux éléments de type différents");
+          exit(1);
+          return;
+        }
+      }
+    }
+
+    gen_comparaison(n);
+    break;
+
+  /* opérations booléennes */
+  case '|':
+  case '&':
+    if (n->exp1 == NULL || n->exp2 == NULL)
+    {
+      fprintf(stderr, "L'une des deux opérandes est NULL");
+      exit(1);
+      return;
+    }
+    else
+    {
+      if (n->exp1->type_exp != i_operation && n->exp2->type_exp != i_operation)
+      {
+        if (n->exp1->type_exp != i_booleen || n->exp2->type_exp != i_booleen)
+        {
+          fprintf(stderr, "Erreur de typage, un entier ou plus pour une opération booléenne");
+          exit(1);
+          return;
+        }
+      }
+    }
+    gen_operation_booleenne(n);
+    break;
+  case '!':
+    if (n->exp1->type_exp != i_operation && n->exp2->type_exp != i_operation)
+    {
+      if (n->exp1 == NULL)
+      {
+        if (n->exp2->type_exp != i_booleen)
+        {
+          fprintf(stderr, "Erreur de typage, un entier ou plus pour une opération booléenne");
+          exit(1);
+          return;
+        }
+      }
+      if (n->exp2 == NULL)
+      {
+        if (n->exp1->type_exp != i_booleen)
+        {
+          fprintf(stderr, "Erreur de typage, un entier ou plus pour une opération booléenne");
+          exit(1);
+          return;
+        }
+      }
+    }
+    gen_operation_booleenne(n);
+    break;
+
+  /* opérations non implémentées */
+  default:
+    fprintf(stderr, "génération opération %d non implémenté\n", n->type_operation);
+    exit(1);
+  }
 }
