@@ -21,7 +21,8 @@ main:
 	b	.e1		 @ déplace le compteur de programme à la partie fin
 	.e0:		 @ etiquette vrai
 	mov	r0, #1		 @ affecte 1 à r0
-	.e1:		 @ etiquette faux
+	.e1:		 @ etiquette fin
+	push	{r0}		 @ empile le resultat de la comparaison
 	pop	{r1}
 	ldr	r0, =.LC1
 	bl	printf
@@ -37,7 +38,8 @@ main:
 	b	.e3		 @ déplace le compteur de programme à la partie fin
 	.e2:		 @ etiquette vrai
 	mov	r0, #1		 @ affecte 1 à r0
-	.e3:		 @ etiquette faux
+	.e3:		 @ etiquette fin
+	push	{r0}		 @ empile le resultat de la comparaison
 	pop	{r1}
 	ldr	r0, =.LC1
 	bl	printf
@@ -53,7 +55,8 @@ main:
 	b	.e5		 @ déplace le compteur de programme à la partie fin
 	.e4:		 @ etiquette vrai
 	mov	r0, #1		 @ affecte 1 à r0
-	.e5:		 @ etiquette faux
+	.e5:		 @ etiquette fin
+	push	{r0}		 @ empile le resultat de la comparaison
 	pop	{r1}
 	ldr	r0, =.LC1
 	bl	printf
@@ -69,7 +72,8 @@ main:
 	b	.e7		 @ déplace le compteur de programme à la partie fin
 	.e6:		 @ etiquette vrai
 	mov	r0, #1		 @ affecte 1 à r0
-	.e7:		 @ etiquette faux
+	.e7:		 @ etiquette fin
+	push	{r0}		 @ empile le resultat de la comparaison
 	pop	{r1}
 	ldr	r0, =.LC1
 	bl	printf
@@ -85,7 +89,8 @@ main:
 	b	.e9		 @ déplace le compteur de programme à la partie fin
 	.e8:		 @ etiquette vrai
 	mov	r0, #1		 @ affecte 1 à r0
-	.e9:		 @ etiquette faux
+	.e9:		 @ etiquette fin
+	push	{r0}		 @ empile le resultat de la comparaison
 	pop	{r1}
 	ldr	r0, =.LC1
 	bl	printf
@@ -101,7 +106,8 @@ main:
 	b	.e11		 @ déplace le compteur de programme à la partie fin
 	.e10:		 @ etiquette vrai
 	mov	r0, #1		 @ affecte 1 à r0
-	.e11:		 @ etiquette faux
+	.e11:		 @ etiquette fin
+	push	{r0}		 @ empile le resultat de la comparaison
 	pop	{r1}
 	ldr	r0, =.LC1
 	bl	printf

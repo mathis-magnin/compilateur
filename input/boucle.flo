@@ -1,0 +1,4 @@
+tantque ((5 != 5) ou (12 < 14)) {
+    ecrire(0);
+}
+ecrire(1);

@@ -1,0 +1,17 @@
+si (((4 < 5) et (12 < 42)) ou (Faux)) {
+    ecrire(1);
+}
+sinon si (12 < 3) {
+    ecrire(2);
+}
+
+si (Vrai) {
+    ecrire(3);
+}
+
+si (Faux) {
+    ecrire(4);
+}
+sinon {
+    ecrire(5);
+}
