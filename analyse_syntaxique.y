@@ -86,6 +86,7 @@ n_programme* arbre_abstrait;
 %type <l_inst> listeInstructions
 %type <inst> instruction
 %type <inst> ecrire
+%type <inst> lire
 
 
 %type <exp> expr
@@ -168,9 +169,17 @@ instruction: ecrire {
 	$$ = $1;
 }
 
+instruction: lire {
+    $$ = $1;
+}
+
 
 ecrire: ECRIRE PARENTHESE_OUVRANTE expr PARENTHESE_FERMANTE POINT_VIRGULE {
 	$$ = creer_n_ecrire($3);
+}
+
+lire: LIRE PARENTHESE_OUVRANTE PARENTHESE_FERMANTE POINT_VIRGULE {
+    $$ = creer_n_lire();
 }
 
 
