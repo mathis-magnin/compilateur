@@ -101,7 +101,7 @@ void gen_instruction(n_instruction *n)
     arm_instruction("ldr", "r0", "=.LC1", NULL, NULL);
     arm_instruction("bl", "printf", NULL, NULL, NULL); // on envoie la valeur de r1 sur la sortie standard
   }
-  else if (n->type_instruction == i_lire)
+  else if (n->u.exp->type_exp == i_lire)
   {
     arm_instruction("ldr", "r0", "=.LC1", NULL, NULL);
     arm_instruction("sub", "sp", "sp", "#4", "effectue l'opération sp-4 et stocke le résultat dans sp");
