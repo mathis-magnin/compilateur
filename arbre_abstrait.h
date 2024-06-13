@@ -231,12 +231,10 @@ n_instruction *creer_n_ecrire(n_exp *exp);
 n_instruction *creer_n_retourner(n_exp *exp);
 n_instruction *creer_n_declaration(type type, char *identifiant, n_exp *exp);
 n_instruction *creer_n_affectation(char *identifiant, n_exp *exp);
-n_instruction *creer_n_instruction_conditionnelle(n_instruction *n, n_l_instructions *instructions);
-n_instruction *creer_n_condition(n_instruction *n, n_exp *exp);
-n_instruction *creer_n_si();
-n_instruction *creer_n_sinon();
-n_instruction *creer_n_sinon_si();
-n_instruction *creer_n_tant_que();
+n_instruction *creer_n_si(n_exp *exp, n_l_instructions *instructions);
+n_instruction *creer_n_sinon_si(n_instruction *si, n_exp *exp, n_l_instructions *instructions);
+n_instruction *creer_n_sinon(n_instruction *si, n_l_instructions *instructions);
+n_instruction *creer_n_tant_que(n_exp *exp, n_l_instructions *instructions);
 
 n_exp *creer_n_entier(int valeur);
 n_exp *creer_n_booleen(int valeur);

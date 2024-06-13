@@ -185,18 +185,18 @@ void afficher_n_instruction(n_instruction *instruction, int indent)
 		afficher_n_l_instructions(instruction->u.instr_cond->instructions, indent + 1);
 		afficher("</cond_si>", indent);
 	}
-	else if (instruction->type_instruction == i_sinon)
-	{
-		afficher("<cond_sinon>", indent);
-		afficher_n_l_instructions(instruction->u.instr_cond->instructions, indent + 1);
-		afficher("</cond_sinon>", indent);
-	}
 	else if (instruction->type_instruction == i_sinon_si)
 	{
 		afficher("<cond_sinon_si>", indent);
 		afficher_n_exp(instruction->u.instr_cond->exp, indent + 1);
 		afficher_n_l_instructions(instruction->u.instr_cond->instructions, indent + 1);
 		afficher("</cond_sinon_si>", indent);
+	}
+	else if (instruction->type_instruction == i_sinon)
+	{
+		afficher("<cond_sinon>", indent);
+		afficher_n_l_instructions(instruction->u.instr_cond->instructions, indent + 1);
+		afficher("</cond_sinon>", indent);
 	}
 	else if (instruction->type_instruction == i_tant_que)
 	{
@@ -345,11 +345,22 @@ n_programme *creer_n_programme(n_l_fonctions *fonctions, n_l_instructions *instr
 n_l_fonctions *creer_n_l_fonctions(n_l_fonctions *fonctions, n_fonction *fonction)
 {
 	n_l_fonctions *n = malloc(sizeof(n_l_fonctions));
-
 	n->fonction = fonction;
-	n->fonctions = fonctions;
-
-	return n;
+	n->fonctions = NULL;
+	if (fonctions != NULL)
+	{
+		n_l_fonctions *i = fonctions;
+		while (i->fonctions != NULL)
+		{
+			i = i->fonctions;
+		}
+		i->fonctions = n;
+	}
+	else
+	{
+		fonctions = n;
+	}
+	return fonctions;
 }
 
 //
@@ -455,47 +466,78 @@ n_instruction *creer_n_affectation(char *identifiant, n_exp *exp)
 
 //
 
-n_instruction *creer_n_instruction_conditionnelle(n_instruction *n, n_l_instructions *instructions)
-{
-	n->u.instr_cond->instructions = instructions;
-	return n;
-}
-
-n_instruction *creer_n_condition(n_instruction *n, n_exp *exp)
-{
-	n->u.instr_cond->exp = exp;
-	return n;
-}
-
-n_instruction *creer_n_si()
+n_instruction *creer_n_si(n_exp *exp, n_l_instructions *instructions)
 {
 	n_instruction *n = malloc(sizeof(n_instruction));
 	n->type_instruction = i_si;
 	n->u.instr_cond = malloc(sizeof(n_instr_cond));
+	n->u.instr_cond->exp = exp;
+	n->u.instr_cond->instructions = instructions;
 	return n;
 }
 
-n_instruction *creer_n_sinon()
-{
-	n_instruction *n = malloc(sizeof(n_instruction));
-	n->type_instruction = i_sinon;
-	n->u.instr_cond = malloc(sizeof(n_instr_cond));
-	return n;
-}
-
-n_instruction *creer_n_sinon_si()
+n_instruction *creer_n_sinon_si(n_instruction *si, n_exp *exp, n_l_instructions *instructions)
 {
 	n_instruction *n = malloc(sizeof(n_instruction));
 	n->type_instruction = i_sinon_si;
 	n->u.instr_cond = malloc(sizeof(n_instr_cond));
-	return n;
+	n->u.instr_cond->exp = exp;
+	n->u.instr_cond->instructions = instructions;
+
+	n_l_instructions *nouv_l_instr = malloc(sizeof(n_l_instructions));
+	nouv_l_instr->instruction = n;
+	nouv_l_instr->instructions = NULL;
+	if (si->u.instr_cond->instructions != NULL)
+	{
+		n_l_instructions *i = si->u.instr_cond->instructions;
+		while (i->instructions != NULL)
+		{
+			i = i->instructions;
+		}
+		i->instructions = nouv_l_instr;
+	}
+	else
+	{
+		si->u.instr_cond->instructions = nouv_l_instr;
+	}
+
+	return si;
 }
 
-n_instruction *creer_n_tant_que()
+n_instruction *creer_n_sinon(n_instruction *si, n_l_instructions *instructions)
+{
+	n_instruction *n = malloc(sizeof(n_instruction));
+	n->type_instruction = i_sinon;
+	n->u.instr_cond = malloc(sizeof(n_instr_cond));
+	n->u.instr_cond->instructions = instructions;
+
+	n_l_instructions *nouv_l_instr = malloc(sizeof(n_l_instructions));
+	nouv_l_instr->instruction = n;
+	nouv_l_instr->instructions = NULL;
+	if (si->u.instr_cond->instructions != NULL)
+	{
+		n_l_instructions *i = si->u.instr_cond->instructions;
+		while (i->instructions != NULL)
+		{
+			i = i->instructions;
+		}
+		i->instructions = nouv_l_instr;
+	}
+	else
+	{
+		si->u.instr_cond->instructions = nouv_l_instr;
+	}
+
+	return si;
+}
+
+n_instruction *creer_n_tant_que(n_exp *exp, n_l_instructions *instructions)
 {
 	n_instruction *n = malloc(sizeof(n_instruction));
 	n->type_instruction = i_tant_que;
 	n->u.instr_cond = malloc(sizeof(n_instr_cond));
+	n->u.instr_cond->exp = exp;
+	n->u.instr_cond->instructions = instructions;
 	return n;
 }
 
