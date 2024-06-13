@@ -22,7 +22,6 @@ main:
 	.e0:		 @ etiquette vrai
 	mov	r0, #1		 @ affecte 1 à r0
 	.e1:		 @ etiquette faux
-	push	{r0}		 @ empile le résultat
 	pop	{r1}
 	ldr	r0, =.LC1
 	bl	printf
@@ -39,7 +38,6 @@ main:
 	.e2:		 @ etiquette vrai
 	mov	r0, #1		 @ affecte 1 à r0
 	.e3:		 @ etiquette faux
-	push	{r0}		 @ empile le résultat
 	pop	{r1}
 	ldr	r0, =.LC1
 	bl	printf
@@ -56,7 +54,6 @@ main:
 	.e4:		 @ etiquette vrai
 	mov	r0, #1		 @ affecte 1 à r0
 	.e5:		 @ etiquette faux
-	push	{r0}		 @ empile le résultat
 	pop	{r1}
 	ldr	r0, =.LC1
 	bl	printf
@@ -73,7 +70,6 @@ main:
 	.e6:		 @ etiquette vrai
 	mov	r0, #1		 @ affecte 1 à r0
 	.e7:		 @ etiquette faux
-	push	{r0}		 @ empile le résultat
 	pop	{r1}
 	ldr	r0, =.LC1
 	bl	printf
@@ -90,7 +86,6 @@ main:
 	.e8:		 @ etiquette vrai
 	mov	r0, #1		 @ affecte 1 à r0
 	.e9:		 @ etiquette faux
-	push	{r0}		 @ empile le résultat
 	pop	{r1}
 	ldr	r0, =.LC1
 	bl	printf
@@ -107,7 +102,6 @@ main:
 	.e10:		 @ etiquette vrai
 	mov	r0, #1		 @ affecte 1 à r0
 	.e11:		 @ etiquette faux
-	push	{r0}		 @ empile le résultat
 	pop	{r1}
 	ldr	r0, =.LC1
 	bl	printf

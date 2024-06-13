@@ -189,7 +189,7 @@ instruction_base: RETOURNER expr {
     $$ = creer_n_retourner($2);
 }
 
-// 1) b. Déclarations et affectations
+// 1 b. Déclarations et affectations
 
 instruction_base: TYPE IDENTIFIANT declaration {
     $$ = creer_n_declaration($1, $2, $3);
