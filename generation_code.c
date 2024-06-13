@@ -62,6 +62,8 @@ char *malloc_etiquette()
   return malloc(sizeof(char) * (c + 4));
 }
 
+/* Fonctions de génération du code */
+
 void gen_prog(n_programme *n)
 {
   printifm("%s", ".LC0:\n");
@@ -79,6 +81,8 @@ void gen_prog(n_programme *n)
   arm_instruction("mov", "r0", "#0", NULL, NULL);
   arm_instruction("pop", "{fp, pc}", NULL, NULL, NULL);
 }
+
+/* Instructions */
 
 void gen_liste_instructions(n_l_instructions *n)
 {
@@ -128,6 +132,8 @@ void gen_instruction(n_instruction *n)
   }
 }
 
+/* Expression */
+
 void gen_exp(n_exp *n)
 {
   char buffer[12];
@@ -166,211 +172,7 @@ void gen_exp(n_exp *n)
   }
 }
 
-void gen_operation_entiere(n_operation *n)
-{
-
-  // Déclaration de __aeabi_idiv
-  asm(".global __aeabi_idiv");
-  // Déclaration de __aeabi_idivmod
-  asm(".global __aeabi_idivmod");
-  switch (n->type_operation)
-  {
-  case '+':
-    arm_instruction("add", "r0", "r1", "r0", "effectue l'opération r0+r1");
-    // le résultat est stocké dans r0
-    arm_instruction("push", "{r0}", NULL, NULL, "empile le résultat");
-    break;
-  case '-':
-    arm_instruction("sub", "r0", "r0", "r1", "effectue l'opération r0-r1");
-    // le résultat est stocké dans r0
-    arm_instruction("push", "{r0}", NULL, NULL, "empile le résultat");
-    break;
-  case '*':
-    arm_instruction("mul", "r0", "r1", "r0", "effectue l'opération r0*r1");
-    // le résultat est stocké dans r0
-    arm_instruction("push", "{r0}", NULL, NULL, "empile le résultat");
-    break;
-  case '/':
-    arm_instruction("bl ", "__aeabi_idiv", NULL, NULL, "");
-    // le résultat est stocké dans r0
-    arm_instruction("push", "{r0}", NULL, NULL, "empile le résultat");
-    break;
-  case '%':
-    arm_instruction("bl ", "__aeabi_idivmod", NULL, NULL, "");
-    // le résultat est stocké dans r1
-    arm_instruction("push", "{r1}", NULL, NULL, "empile le résultat");
-    break;
-  }
-}
-
-void gen_comparaison(n_operation *n)
-{
-  arm_instruction("cmp", "r0", "r1", NULL, "effectue l'opération de comparaison");
-
-  char *etiquette_vrai = malloc_etiquette();
-  char *etiquette_fin = malloc_etiquette();
-  nouveau_nom_etiquette(etiquette_vrai);
-  nouveau_nom_etiquette(etiquette_fin);
-
-  switch (n->type_operation)
-  {
-  case 'e':
-    arm_instruction("beq", etiquette_vrai, NULL, NULL, "déplace le compteur de programme à la partie vrai");
-    break;
-
-  case 'd':
-    arm_instruction("bne", etiquette_vrai, NULL, NULL, "déplace le compteur de programme à la partie vrai");
-    break;
-
-  case '<':
-    arm_instruction("blt", etiquette_vrai, NULL, NULL, "déplace le compteur de programme à la partie vrai");
-    break;
-
-  case '>':
-    arm_instruction("bgt", etiquette_vrai, NULL, NULL, "déplace le compteur de programme à la partie vrai");
-    break;
-
-  case 'i':
-    arm_instruction("ble", etiquette_vrai, NULL, NULL, "déplace le compteur de programme à la partie vrai");
-    break;
-
-  case 's':
-    arm_instruction("bge", etiquette_vrai, NULL, NULL, "déplace le compteur de programme à la partie vrai");
-    break;
-  }
-
-  /* Faux */
-  arm_instruction("mov", "r0", "#0", NULL, "affecte 0 à r0");
-  arm_instruction("b", etiquette_fin, NULL, NULL, "déplace le compteur de programme à la partie fin");
-
-  /* Vrai */
-  arm_instruction(strcat(etiquette_vrai, ":"), NULL, NULL, NULL, "etiquette vrai");
-  arm_instruction("mov", "r0", "#1", NULL, "affecte 1 à r0");
-
-  /* Fin */
-  arm_instruction(strcat(etiquette_fin, ":"), NULL, NULL, NULL, "etiquette fin");
-}
-
-/* Instructions conditionelles */
-
-void gen_si(n_instr_cond *n)
-{
-  /* Analyse sémantique */
-  switch (n->exp->type_exp)
-  {
-  case i_operation:
-    gen_exp(n->exp);
-    break;
-
-  case i_booleen:
-    gen_exp(n->exp);
-    break;
-
-  default:
-    fprintf(stderr, "Une instruction conditionelle doit utiliser une expression booléenne.\n");
-    exit(1);
-  }
-
-  /* Génération de code */
-  arm_instruction("pop", "{r0}", NULL, NULL, "dépile l'évaluation de l'expression dans r0");
-  arm_instruction("cmp", "r0", "#0", NULL, "effectue l'opération de comparaison");
-
-  char *etiquette_faux = malloc_etiquette();
-  nouveau_nom_etiquette(etiquette_faux);
-
-  arm_instruction("beq", etiquette_faux, NULL, NULL, "déplace le compteur de programme à la partie faux");
-  gen_liste_instructions(n->instructions);
-
-  /* Faux */
-  arm_instruction(strcat(etiquette_faux, ":"), NULL, NULL, NULL, "etiquette faux");
-}
-
-void gen_tant_que(n_instr_cond *n)
-{
-  char *etiquette_debut = malloc_etiquette();
-  char *declaration_debut = malloc_etiquette();
-  char *etiquette_fin = malloc_etiquette();
-  nouveau_nom_etiquette(etiquette_debut);
-  nouveau_nom_etiquette(etiquette_fin);
-  strcpy(declaration_debut, etiquette_debut);
-
-  arm_instruction(strcat(declaration_debut, ":"), NULL, NULL, NULL, "etiquette debut");
-
-  /* Analyse sémantique et évaluation de la condition */
-  switch (n->exp->type_exp)
-  {
-  case i_operation:
-    gen_exp(n->exp);
-    break;
-
-  case i_booleen:
-    gen_exp(n->exp);
-    break;
-
-  default:
-    fprintf(stderr, "Une instruction conditionelle doit utiliser une expression booléenne.\n");
-    exit(1);
-  }
-
-  arm_instruction("pop", "{r0}", NULL, NULL, "dépile l'évaluation de l'expression dans r0");
-  arm_instruction("cmp", "r0", "#0", NULL, "effectue l'opération de comparaison");
-
-  arm_instruction("beq", etiquette_fin, NULL, NULL, "déplace le compteur de programme à l'etiquette fin");
-
-  /* Boucle */
-  arm_instruction("pop", "{r1}", NULL, NULL, "depile l'ancienne valeur de r1 dans r1");
-  arm_instruction("pop", "{r0}", NULL, NULL, "depile l'ancienne valeur de r0 dans r0");
-
-  gen_liste_instructions(n->instructions);
-
-  arm_instruction("push", "{r0}", NULL, NULL, "empile r0"); // r0 et r1 sont les deux registres susceptibles d'être changés pendant l'évaluation de la condition
-  arm_instruction("push", "{r1}", NULL, NULL, "empile r1");
-
-  arm_instruction("beq", etiquette_debut, NULL, NULL, "déplace le compteur de programme à l'etiquette debut");
-
-  /* Fin */
-  arm_instruction(strcat(etiquette_fin, ":"), NULL, NULL, NULL, "etiquette fin");
-}
-
-void gen_operation_booleenne(n_operation *n)
-{
-  char *etiquette_vrai = malloc_etiquette();
-  char *etiquette_fin = malloc_etiquette();
-  nouveau_nom_etiquette(etiquette_vrai);
-  nouveau_nom_etiquette(etiquette_fin);
-
-  // Déclaration de __aeabi_idivmod
-  asm(".global __aeabi_idivmod");
-
-  switch (n->type_operation)
-  {
-  case '|':
-    arm_instruction("add", "r0", "r0", "r1", "effectue l'opération r0+r1");
-    // le résultat est stocké dans r0
-    arm_instruction("push", "{r0}", NULL, NULL, "empile le résultat");
-    arm_instruction("pop", "{r0}", NULL, NULL, "dépile dans r0");
-    arm_instruction("cmp", "r0", "#1", NULL, "compare r0 à 1 (r0-1)");
-    // le résultat est stocké dans r0
-    arm_instruction("push", "{r0}", NULL, NULL, "empile le résultat");
-    arm_instruction("pop", "{r0}", NULL, NULL, "dépile dans r0");
-    // si le résultat de la comparaison est strictement négatif
-    arm_instruction("movlt", "r0", "#0", NULL, "si le résultat est strictement négatif, affecte 0 à r0");
-    // si le résultat de la comparaison est supérieur ou égal à 0
-    arm_instruction("movge", "r0", "#1", NULL, "sinon, affecte 1 à r0");
-    arm_instruction("push", "{r0}", NULL, NULL, "empile le résultat");
-    break;
-  case '&':
-    arm_instruction("mul", "r0", "r0", "r1", "effectue l'opération r0*r1");
-    // le résultat est stocké dans r0
-    arm_instruction("push", "{r0}", NULL, NULL, "empile le résultat");
-    break;
-  case '!':
-    arm_instruction("eor", "r0", "r0", "#1", "effectue l'opération r0 XOR #1");
-    // le résultat est stocké dans r0
-    arm_instruction("push", "{r0}", NULL, NULL, "empile le résultat");
-    break;
-  }
-}
+/* Opération */
 
 void gen_operation(n_operation *n)
 {
@@ -392,7 +194,6 @@ void gen_operation(n_operation *n)
   /* Vérification de type */
   switch (n->type_operation)
   {
-
   /* opération arithmétiques */
   case '+':
   case '-':
@@ -498,6 +299,7 @@ void gen_operation(n_operation *n)
     }
     gen_operation_booleenne(n);
     break;
+
   case '!':
     if (n->exp1 == NULL || (n->exp1 != NULL && n->exp2 != NULL))
     {
@@ -513,4 +315,216 @@ void gen_operation(n_operation *n)
     fprintf(stderr, "génération opération %d non implémenté\n", n->type_operation);
     exit(1);
   }
+}
+
+void gen_operation_entiere(n_operation *n)
+{
+
+  // Déclaration de __aeabi_idiv
+  asm(".global __aeabi_idiv");
+  // Déclaration de __aeabi_idivmod
+  asm(".global __aeabi_idivmod");
+  switch (n->type_operation)
+  {
+  case '+':
+    arm_instruction("add", "r0", "r1", "r0", "effectue l'opération r0+r1");
+    // le résultat est stocké dans r0
+    arm_instruction("push", "{r0}", NULL, NULL, "empile le résultat");
+    break;
+
+  case '-':
+    arm_instruction("sub", "r0", "r0", "r1", "effectue l'opération r0-r1");
+    // le résultat est stocké dans r0
+    arm_instruction("push", "{r0}", NULL, NULL, "empile le résultat");
+    break;
+
+  case '*':
+    arm_instruction("mul", "r0", "r1", "r0", "effectue l'opération r0*r1");
+    // le résultat est stocké dans r0
+    arm_instruction("push", "{r0}", NULL, NULL, "empile le résultat");
+    break;
+
+  case '/':
+    arm_instruction("bl ", "__aeabi_idiv", NULL, NULL, "");
+    // le résultat est stocké dans r0
+    arm_instruction("push", "{r0}", NULL, NULL, "empile le résultat");
+    break;
+
+  case '%':
+    arm_instruction("bl ", "__aeabi_idivmod", NULL, NULL, "");
+    // le résultat est stocké dans r1
+    arm_instruction("push", "{r1}", NULL, NULL, "empile le résultat");
+    break;
+  }
+}
+
+void gen_operation_booleenne(n_operation *n)
+{
+  char *etiquette_vrai = malloc_etiquette();
+  char *etiquette_fin = malloc_etiquette();
+  nouveau_nom_etiquette(etiquette_vrai);
+  nouveau_nom_etiquette(etiquette_fin);
+
+  // Déclaration de __aeabi_idivmod
+  asm(".global __aeabi_idivmod");
+
+  switch (n->type_operation)
+  {
+  case '|':
+    arm_instruction("add", "r0", "r0", "r1", "effectue l'opération r0+r1");
+    // le résultat est stocké dans r0
+    arm_instruction("push", "{r0}", NULL, NULL, "empile le résultat");
+    arm_instruction("pop", "{r0}", NULL, NULL, "dépile dans r0");
+    arm_instruction("cmp", "r0", "#1", NULL, "compare r0 à 1 (r0-1)");
+    // le résultat est stocké dans r0
+    arm_instruction("push", "{r0}", NULL, NULL, "empile le résultat");
+    arm_instruction("pop", "{r0}", NULL, NULL, "dépile dans r0");
+    // si le résultat de la comparaison est strictement négatif
+    arm_instruction("movlt", "r0", "#0", NULL, "si le résultat est strictement négatif, affecte 0 à r0");
+    // si le résultat de la comparaison est supérieur ou égal à 0
+    arm_instruction("movge", "r0", "#1", NULL, "sinon, affecte 1 à r0");
+    arm_instruction("push", "{r0}", NULL, NULL, "empile le résultat");
+    break;
+
+  case '&':
+    arm_instruction("mul", "r0", "r0", "r1", "effectue l'opération r0*r1");
+    // le résultat est stocké dans r0
+    arm_instruction("push", "{r0}", NULL, NULL, "empile le résultat");
+    break;
+
+  case '!':
+    arm_instruction("eor", "r0", "r0", "#1", "effectue l'opération r0 XOR #1");
+    // le résultat est stocké dans r0
+    arm_instruction("push", "{r0}", NULL, NULL, "empile le résultat");
+    break;
+  }
+}
+
+void gen_comparaison(n_operation *n)
+{
+  arm_instruction("cmp", "r0", "r1", NULL, "effectue l'opération de comparaison");
+
+  char *etiquette_vrai = malloc_etiquette();
+  char *etiquette_fin = malloc_etiquette();
+  nouveau_nom_etiquette(etiquette_vrai);
+  nouveau_nom_etiquette(etiquette_fin);
+
+  switch (n->type_operation)
+  {
+  case 'e':
+    arm_instruction("beq", etiquette_vrai, NULL, NULL, "déplace le compteur de programme à la partie vrai");
+    break;
+
+  case 'd':
+    arm_instruction("bne", etiquette_vrai, NULL, NULL, "déplace le compteur de programme à la partie vrai");
+    break;
+
+  case '<':
+    arm_instruction("blt", etiquette_vrai, NULL, NULL, "déplace le compteur de programme à la partie vrai");
+    break;
+
+  case '>':
+    arm_instruction("bgt", etiquette_vrai, NULL, NULL, "déplace le compteur de programme à la partie vrai");
+    break;
+
+  case 'i':
+    arm_instruction("ble", etiquette_vrai, NULL, NULL, "déplace le compteur de programme à la partie vrai");
+    break;
+
+  case 's':
+    arm_instruction("bge", etiquette_vrai, NULL, NULL, "déplace le compteur de programme à la partie vrai");
+    break;
+  }
+
+  /* Faux */
+  arm_instruction("mov", "r0", "#0", NULL, "affecte 0 à r0");
+  arm_instruction("b", etiquette_fin, NULL, NULL, "déplace le compteur de programme à la partie fin");
+
+  /* Vrai */
+  arm_instruction(strcat(etiquette_vrai, ":"), NULL, NULL, NULL, "etiquette vrai");
+  arm_instruction("mov", "r0", "#1", NULL, "affecte 1 à r0");
+
+  /* Fin */
+  arm_instruction(strcat(etiquette_fin, ":"), NULL, NULL, NULL, "etiquette fin");
+}
+
+/* Instructions conditionelles */
+
+void gen_tant_que(n_instr_cond *n)
+{
+  char *etiquette_debut = malloc_etiquette();
+  char *declaration_debut = malloc_etiquette();
+  char *etiquette_fin = malloc_etiquette();
+  nouveau_nom_etiquette(etiquette_debut);
+  nouveau_nom_etiquette(etiquette_fin);
+  strcpy(declaration_debut, etiquette_debut);
+
+  arm_instruction(strcat(declaration_debut, ":"), NULL, NULL, NULL, "etiquette debut");
+
+  /* Analyse sémantique et évaluation de la condition */
+  switch (n->exp->type_exp)
+  {
+  case i_operation:
+    gen_exp(n->exp);
+    break;
+
+  case i_booleen:
+    gen_exp(n->exp);
+    break;
+
+  default:
+    fprintf(stderr, "Une instruction conditionelle doit utiliser une expression booléenne.\n");
+    exit(1);
+  }
+
+  arm_instruction("pop", "{r0}", NULL, NULL, "dépile l'évaluation de l'expression dans r0");
+  arm_instruction("cmp", "r0", "#0", NULL, "effectue l'opération de comparaison");
+
+  arm_instruction("beq", etiquette_fin, NULL, NULL, "déplace le compteur de programme à l'etiquette fin");
+
+  /* Boucle */
+  arm_instruction("pop", "{r1}", NULL, NULL, "depile l'ancienne valeur de r1 dans r1");
+  arm_instruction("pop", "{r0}", NULL, NULL, "depile l'ancienne valeur de r0 dans r0");
+
+  gen_liste_instructions(n->instructions);
+
+  arm_instruction("push", "{r0}", NULL, NULL, "empile r0"); // r0 et r1 sont les deux registres susceptibles d'être changés pendant l'évaluation de la condition
+  arm_instruction("push", "{r1}", NULL, NULL, "empile r1");
+
+  arm_instruction("beq", etiquette_debut, NULL, NULL, "déplace le compteur de programme à l'etiquette debut");
+
+  /* Fin */
+  arm_instruction(strcat(etiquette_fin, ":"), NULL, NULL, NULL, "etiquette fin");
+}
+
+void gen_si(n_instr_cond *n)
+{
+  /* Analyse sémantique */
+  switch (n->exp->type_exp)
+  {
+  case i_operation:
+    gen_exp(n->exp);
+    break;
+
+  case i_booleen:
+    gen_exp(n->exp);
+    break;
+
+  default:
+    fprintf(stderr, "Une instruction conditionelle doit utiliser une expression booléenne.\n");
+    exit(1);
+  }
+
+  /* Génération de code */
+  arm_instruction("pop", "{r0}", NULL, NULL, "dépile l'évaluation de l'expression dans r0");
+  arm_instruction("cmp", "r0", "#0", NULL, "effectue l'opération de comparaison");
+
+  char *etiquette_faux = malloc_etiquette();
+  nouveau_nom_etiquette(etiquette_faux);
+
+  arm_instruction("beq", etiquette_faux, NULL, NULL, "déplace le compteur de programme à la partie faux");
+  gen_liste_instructions(n->instructions);
+
+  /* Faux */
+  arm_instruction(strcat(etiquette_faux, ":"), NULL, NULL, NULL, "etiquette faux");
 }
