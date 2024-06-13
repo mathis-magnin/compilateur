@@ -106,14 +106,14 @@ void gen_instruction(n_instruction *n)
     arm_instruction("ldr", "r0", "=.LC1", NULL, NULL);
     arm_instruction("bl", "printf", NULL, NULL, NULL); // on envoie la valeur de r1 sur la sortie standard
   }
-  /* instruction lire non implémentée syntaxiquement */
+  /* instruction lire non implémentée syntaxiquement
   else if (n->type_instruction == i_lire)
   {
     arm_instruction("ldr", "r0", "=.LC1", NULL, NULL);
     arm_instruction("sub", "sp", "sp", "#4", "effectue l'opération sp-4 et stocke le résultat dans sp");
     arm_instruction("mov", "r1", "sp", NULL, NULL);   // Copie l'adresse de sp dans r1
     arm_instruction("bl", "scanf", NULL, NULL, NULL); // on récupère les infos de l'entrée standard
-  }
+  } */
   else
   {
     fprintf(stderr, "génération type instruction non implémenté\n");
@@ -230,14 +230,20 @@ void gen_comparaison(n_operation *n)
 
 void gen_operation_booleenne(n_operation *n)
 {
+  char *etiquette_vrai = malloc_etiquette();
+  char *etiquette_fin = malloc_etiquette();
+  nouveau_nom_etiquette(etiquette_vrai);
+  nouveau_nom_etiquette(etiquette_fin);
+
   switch (n->type_operation)
   {
   case '|':
     arm_instruction("add", "r2", "r0", "r1", "effectue l'opération r0+r1");
     // le résultat est stocké dans r2
-    arm_instruction("cmp", "r2", "r2", "#0", "compare r2 à 0 (r2-0)");
+    arm_instruction("cmp", "r2", "r2", "#1", "compare r2 à 1 (r2-1)");
     // le résultat est stocké dans r2
-    arm_instruction("push", "{r2}", NULL, NULL, "empile le résultat");
+    arm_instruction("blt", etiquette_fin, NULL, NULL, "déplace le compteur de programme à la partie fin");
+    arm_instruction("bge", etiquette_vrai, NULL, NULL, "déplace la compteur de programme à la partie vraie");
     break;
   case '&':
     arm_instruction("mul", "r0", "r0", "r1", "effectue l'opération r0*r1");
@@ -266,6 +272,17 @@ void gen_operation_booleenne(n_operation *n)
     arm_instruction("push", "{r1}", NULL, NULL, "empile le résultat");
     break;
   }
+
+  /* Faux */
+  arm_instruction("mov", "r0", "#0", NULL, "affecte 0 à r0");
+  arm_instruction("b", etiquette_fin, NULL, NULL, "déplace le compteur de programme à la partie fin");
+
+  /* Vrai */
+  arm_instruction(strcat(etiquette_vrai, ":"), NULL, NULL, NULL, "etiquette vrai");
+  arm_instruction("mov", "r0", "#1", NULL, "affecte 1 à r0");
+
+  /* Fin */
+  arm_instruction(strcat(etiquette_fin, ":"), NULL, NULL, NULL, "etiquette faux");
 }
 
 void gen_operation(n_operation *n)
