@@ -3,6 +3,7 @@
 #include <string.h>
 #include "arbre_abstrait.h"
 #include "generation_code.h"
+#include "table_des_symboles.h"
 
 // pour afficher le code uniquement si l'option afficher_arm vaut 1
 #define printifm(format, ...)    \
@@ -45,68 +46,119 @@ void arm_instruction(char *opcode, char *op1, char *op2, char *op3, char *commen
   arm_comment(comment);
 }
 
-void gen_prog(n_programme *n)
+void gen_def_fonction(n_fonction *f)
 {
-
-  printifm("%s", ".LC0:\n");
-  printifm("%s", "	.ascii	\"%d\\000\"\n");
-  printifm("%s", "	.align	2\n");
-  printifm("%s", ".LC1:\n");
-  printifm("%s", "	.ascii	\"%d\\012\\000\"\n");
-  printifm("%s", "	.text\n");
-  printifm("%s", "	.align	2\n");
-  printifm("%s", "	.global	main\n");
-  printifm("%s", "main:\n")
-      arm_instruction("push", "{fp,lr}", NULL, NULL, NULL);
+  printifm("_%s:\n", f->identifiant);
+  arm_instruction("push", "{fp, lr}", NULL, NULL, NULL);
   arm_instruction("add", "fp", "sp", "#4", NULL);
-  gen_liste_instructions(n->instructions);
+  gen_liste_instructions(f->instructions, f->type);
   arm_instruction("mov", "r0", "#0", NULL, NULL);
   arm_instruction("pop", "{fp, pc}", NULL, NULL, NULL);
 }
 
-void gen_liste_instructions(n_l_instructions *n)
+void gen_prog(n_programme *n)
+{
+  TableSymboles *table = creer_table_symboles();
+
+  for (n_l_fonctions *lf = n->fonctions; lf != NULL; lf = lf->fonctions)
+  {
+    gen_def_fonction(lf->fonction);
+  }
+
+  printifm("%s", ".LC0:\n");
+  printifm("%s", "    .ascii    \"%d\\000\"\n");
+  printifm("%s", "    .align    2\n");
+  printifm("%s", ".LC1:\n");
+  printifm("%s", "    .ascii    \"%d\\012\\000\"\n");
+  printifm("%s", "    .text\n");
+  printifm("%s", "    .align    2\n");
+  printifm("%s", "    .global    main\n");
+  printifm("%s", "main:\n");
+  arm_instruction("push", "{fp, lr}", NULL, NULL, NULL);
+  arm_instruction("add", "fp", "sp", "#4", NULL);
+  gen_liste_instructions(n->instructions, TYPE_ENTIER);
+  arm_instruction("mov", "r0", "#0", NULL, NULL);
+  arm_instruction("pop", "{fp, pc}", NULL, NULL, NULL);
+
+  liberer_table_symboles(table);
+}
+
+void gen_liste_instructions(n_l_instructions *n, type type_retour_fonction)
 {
   do
   {
     if (n->instruction != NULL)
     {
-      gen_instruction(n->instruction);
+      gen_instruction(n->instruction, type_retour_fonction);
     }
     n = n->instructions;
   } while (n != NULL);
 }
 
-void gen_instruction(n_instruction *n)
+type obtenir_type_exp(n_exp *exp)
 {
-  if (n->type_instruction == i_ecrire)
+  if (exp->type_exp == i_booleen)
   {
-    gen_exp(n->u.exp);                                // on calcule et empile la valeur de l'expression
-    arm_instruction("pop", "{r1}", NULL, NULL, NULL); // on dépile la valeur d'expression sur r1
-    arm_instruction("ldr", "r0", "=.LC1", NULL, NULL);
-    arm_instruction("bl", "printf", NULL, NULL, NULL); // on envoie la valeur de r1 sur la sortie standard
+    return TYPE_BOOLEEN;
+  }
+  else if (exp->type_exp == i_entier)
+  {
+    return TYPE_ENTIER;
   }
   else
   {
-    fprintf(stderr, "génération type instruction non implémenté\n");
+    fprintf(stderr, "Type d'expression non géré\n");
+    exit(1);
+  }
+}
+
+void gen_instruction(n_instruction *n, type type_retour_fonction)
+{
+  switch (n->type_instruction)
+  {
+  case i_ecrire:
+    gen_exp(n->u.exp);
+    arm_instruction("pop", "{r1}", NULL, NULL, NULL);
+    arm_instruction("ldr", "r0", "=.LC1", NULL, NULL);
+    arm_instruction("bl", "printf", NULL, NULL, NULL);
+    break;
+
+  case i_retourner:
+  {
+    type type_exp = obtenir_type_exp(n->u.exp);
+    if (type_exp != type_retour_fonction)
+    {
+      fprintf(stderr, "Erreur : Le type de retour de l'expression (%d) ne correspond pas au type de retour de la fonction (%d)\n", type_exp, type_retour_fonction);
+      exit(1);
+    }
+    gen_exp(n->u.exp);
+    arm_instruction("pop", "{r2}", NULL, NULL, NULL); // Placer le résultat dans r2
+    arm_instruction("pop", "{pc}", NULL, NULL, NULL); // Retourner avec la valeur dans r2
+  }
+  break;
+
+  default:
+    fprintf(stderr, "Type d'instruction non géré\n");
     exit(1);
   }
 }
 
 void gen_exp(n_exp *n)
 {
-  if (n->type_exp == i_operation)
+  switch (n->type_exp)
   {
+  case i_operation:
     gen_operation(n->u.operation);
-  }
-  else if (n->type_exp == i_entier)
+    break;
+  case i_entier:
   {
     char buffer[12];
     sprintf(buffer, "#%d", n->u.valeur);
     arm_instruction("mov", "r1", buffer, NULL, NULL);  // on met sur la pile la valeur entière
     arm_instruction("push", "{r1}", NULL, NULL, NULL); // on met sur la pile la valeur entière
   }
-  else
-  {
+  break;
+  default:
     fprintf(stderr, "génération type expression non implémenté\n");
     exit(1);
   }

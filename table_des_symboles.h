@@ -5,19 +5,13 @@
 
 typedef struct
 {
-    char *nom;
-    type type_retour; // Utilisation du type défini dans arbre_abstrait.h
-} Fonction;
-
-typedef struct
-{
-    Fonction *fonctions;
+    n_fonction *fonctions;
     int taille;
     int capacite;
 } TableSymboles;
 
 TableSymboles *creer_table_symboles();
-void ajouter_fonction(TableSymboles *table, const char *nom, type type_retour);
+void ajouter_fonction(TableSymboles *table, const char *nom, type type_retour, n_l_instructions *instructions);
 type obtenir_type_fonction(TableSymboles *table, const char *nom);
 int fonction_existe(TableSymboles *table, const char *nom);
 void liberer_table_symboles(TableSymboles *table);

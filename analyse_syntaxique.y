@@ -6,8 +6,7 @@
 #include "table_des_symboles.h"
 
 extern TableSymboles *table_symboles; // Déclaration de la table des symboles
-extern void ajouter_fonction(TableSymboles *table, const char *nom, type type);
-
+extern void ajouter_fonction(TableSymboles *table, const char *nom, type type_retour, n_l_instructions *instructions);
 
 
 //n_programme* yyparse();
@@ -151,12 +150,12 @@ listeFonctions: listeFonctions fonction {
 
 fonction: TYPE IDENTIFIANT PARENTHESE_OUVRANTE listeParametres PARENTHESE_FERMANTE ACCOLADE_OUVRANTE listeInstructions ACCOLADE_FERMANTE { // type
     $$ = creer_n_fonction($1, $2, $4, $7);
-    ajouter_fonction(table_symboles, $2, $1); // Ajouter la fonction à la table des symboles
+    ajouter_fonction(table_symboles, $2, $1, $7); // Ajouter la fonction à la table des symboles
 }
 
 fonction: TYPE IDENTIFIANT PARENTHESE_OUVRANTE PARENTHESE_FERMANTE ACCOLADE_OUVRANTE listeInstructions ACCOLADE_FERMANTE {
     $$ = creer_n_fonction($1, $2, NULL, $6);
-    ajouter_fonction(table_symboles, $2, $1); // Ajouter la fonction à la table des symboles
+    ajouter_fonction(table_symboles, $2, $1, $6); // Ajouter la fonction à la table des symboles
 }
 
 
@@ -210,10 +209,6 @@ instruction_base: TYPE IDENTIFIANT declaration {
 }
 
 instruction_base: IDENTIFIANT AFFECTATION expr {
-    if (!fonction_existe(table_symboles, $1)) {
-        fprintf(stderr, "Erreur : Identifiant %s non déclaré\n", $1);
-        exit(1);
-    }
     $$ = creer_n_affectation($1, $3);
 }
 
@@ -323,6 +318,10 @@ fonc_ou_var_ent: PARENTHESE_OUVRANTE appel_fonc_ent PARENTHESE_FERMANTE {
 }
 
 appel_fonc_ent: {
+    if (!fonction_existe(table_symboles, $1)) {
+        fprintf(stderr, "Erreur : Identifiant %s non déclaré\n", $1);
+        exit(1);
+    }
     $$ = creer_n_appel_fonc_ent(NULL);
 }
 
@@ -389,6 +388,10 @@ comparaison_entiere: appel_fonc_bool {
 }
 /*
 appel_fonc_bool: IDENTIFIANT PARENTHESE_OUVRANTE PARENTHESE_FERMANTE {
+    if (!fonction_existe(table_symboles, $1)) {
+        fprintf(stderr, "Erreur : Identifiant %s non déclaré\n", $1);
+        exit(1);
+    }
     $$ = creer_n_appel_fonc_bool($1, NULL);
 }
 

@@ -8,21 +8,22 @@
 TableSymboles *creer_table_symboles()
 {
     TableSymboles *table = (TableSymboles *)malloc(sizeof(TableSymboles));
-    table->fonctions = (Fonction *)malloc(TAILLE_INITIALE * sizeof(Fonction));
+    table->fonctions = (n_fonction *)malloc(TAILLE_INITIALE * sizeof(n_fonction));
     table->taille = 0;
     table->capacite = TAILLE_INITIALE;
     return table;
 }
 
-void ajouter_fonction(TableSymboles *table, const char *nom, type type_retour)
+void ajouter_fonction(TableSymboles *table, const char *nom, type type_retour, n_l_instructions *instructions)
 {
-    if (table->taille >= table->capacite)
+    if (table->taille == table->capacite)
     {
         table->capacite *= 2;
-        table->fonctions = (Fonction *)realloc(table->fonctions, table->capacite * sizeof(Fonction));
+        table->fonctions = (n_fonction *)realloc(table->fonctions, table->capacite * sizeof(n_fonction));
     }
-    table->fonctions[table->taille].nom = strdup(nom);
-    table->fonctions[table->taille].type_retour = type_retour;
+    table->fonctions[table->taille].identifiant = strdup(nom);
+    table->fonctions[table->taille].type = type_retour;
+    table->fonctions[table->taille].instructions = instructions;
     table->taille++;
 }
 
@@ -30,9 +31,9 @@ type obtenir_type_fonction(TableSymboles *table, const char *nom)
 {
     for (int i = 0; i < table->taille; i++)
     {
-        if (strcmp(table->fonctions[i].nom, nom) == 0)
+        if (strcmp(table->fonctions[i].identifiant, nom) == 0)
         {
-            return table->fonctions[i].type_retour;
+            return table->fonctions[i].type;
         }
     }
     fprintf(stderr, "Erreur : Fonction %s non trouvée\n", nom);
@@ -43,7 +44,7 @@ int fonction_existe(TableSymboles *table, const char *nom)
 {
     for (int i = 0; i < table->taille; i++)
     {
-        if (strcmp(table->fonctions[i].nom, nom) == 0)
+        if (strcmp(table->fonctions[i].identifiant, nom) == 0)
         {
             return 1;
         }
@@ -55,7 +56,7 @@ void liberer_table_symboles(TableSymboles *table)
 {
     for (int i = 0; i < table->taille; i++)
     {
-        free(table->fonctions[i].nom);
+        free(table->fonctions[i].identifiant);
     }
     free(table->fonctions);
     free(table);
