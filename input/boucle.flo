@@ -1,3 +1,4 @@
-tantque ((7 <= 5) ou ((5 < 6) et (4 < 5))) {
+tantque ((5 != 5) ou (12 < 14)) {
     ecrire(0);
 }
+ecrire(1);

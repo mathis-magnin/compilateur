@@ -160,6 +160,8 @@ void gen_exp(n_exp *n)
     arm_instruction("sub", "sp", "sp", "#4", "effectue l'opération sp-4 et stocke le résultat dans sp");
     arm_instruction("mov", "r1", "sp", NULL, NULL);   // Copie l'adresse de sp dans r1
     arm_instruction("bl", "scanf", NULL, NULL, NULL); // on récupère les infos de l'entrée standard
+    arm_instruction("pop", "{r1}", NULL, NULL, "dépilé dans r1");
+    arm_instruction("push", "{r1}", NULL, NULL, NULL);
     break;
 
     // case i_appel_fonction:
