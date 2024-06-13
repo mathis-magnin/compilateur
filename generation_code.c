@@ -101,7 +101,6 @@ void gen_instruction(n_instruction *n)
     arm_instruction("ldr", "r0", "=.LC1", NULL, NULL);
     arm_instruction("bl", "printf", NULL, NULL, NULL); // on envoie la valeur de r1 sur la sortie standard
   }
-  /* instruction lire non implémentée syntaxiquement */
   else if (n->type_instruction == i_lire)
   {
     arm_instruction("ldr", "r0", "=.LC1", NULL, NULL);
@@ -261,38 +260,11 @@ void gen_operation_booleenne(n_operation *n)
     arm_instruction("push", "{r0}", NULL, NULL, "empile le résultat");
     break;
   case '!':
-    arm_instruction("add", "r0", "r0", "#1", "effectue l'opération r0+#1");
+    arm_instruction("eor", "r0", "r0", "#1", "effectue l'opération r0 XOR #1");
     // le résultat est stocké dans r0
-
-    /* Charger r0 */
-    char buffer[12];
-    sprintf(buffer, "#%d", n->exp1->u.valeur);
-    arm_instruction("mov", "r0", buffer, NULL, NULL);
-    arm_instruction("push", "{r0}", NULL, NULL, NULL);
-
-    /* Charger l'immédiat 2 */
-    char buffer2[12];
-    sprintf(buffer2, "#%d", 2);
-    arm_instruction("mov", "#2", buffer2, NULL, NULL);
-    arm_instruction("push", "{r1}", NULL, NULL, NULL);
-
-    // Appeler la fonction de modulo
-    arm_instruction("bl ", "__aeabi_idivmod", NULL, NULL, "");
-    // Le résultat est chargé dans r1
-    arm_instruction("push", "{r1}", NULL, NULL, "empile le résultat");
+    arm_instruction("push", "{r0}", NULL, NULL, "empile le résultat");
     break;
   }
-
-  /* Faux */
-  /*arm_instruction("mov", "r0", "#0", NULL, "affecte 0 à r0");
-  arm_instruction("b", etiquette_fin, NULL, NULL, "déplace le compteur de programme à la partie fin");*/
-
-  /* Vrai */
-  /*arm_instruction(strcat(etiquette_vrai, ":"), NULL, NULL, NULL, "etiquette vrai");
-  arm_instruction("mov", "r0", "#1", NULL, "affecte 1 à r0");*/
-
-  /* Fin */
-  /*arm_instruction(strcat(etiquette_fin, ":"), NULL, NULL, NULL, "etiquette faux");*/
 }
 
 void gen_operation(n_operation *n)
@@ -422,26 +394,11 @@ void gen_operation(n_operation *n)
     gen_operation_booleenne(n);
     break;
   case '!':
-    if (n->exp1->type_exp != i_operation && n->exp2->type_exp != i_operation)
+    if (n->exp1 == NULL || (n->exp1 != NULL && n->exp2 != NULL))
     {
-      if (n->exp1 == NULL)
-      {
-        if (n->exp2->type_exp != i_booleen)
-        {
-          fprintf(stderr, "Erreur de typage, un entier ou plus pour une opération booléenne");
-          exit(1);
-          return;
-        }
-      }
-      if (n->exp2 == NULL)
-      {
-        if (n->exp1->type_exp != i_booleen)
-        {
-          fprintf(stderr, "Erreur de typage, un entier ou plus pour une opération booléenne");
-          exit(1);
-          return;
-        }
-      }
+      fprintf(stderr, "Argumentation invalide");
+      exit(1);
+      return;
     }
     gen_operation_booleenne(n);
     break;
