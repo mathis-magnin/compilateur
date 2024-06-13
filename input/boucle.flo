@@ -1,0 +1,3 @@
+tantque (5 <= 10) {
+	ecrire(0);
+}

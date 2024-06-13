@@ -8,5 +8,7 @@ void gen_exp(n_exp *n);
 void gen_operation(n_operation *n);
 void gen_operation_entiere(n_operation *n);
 void gen_comparaison(n_operation *n);
+void gen_si(n_instr_cond *n);
+void gen_tant_que(n_instr_cond *n);
 
 #endif
