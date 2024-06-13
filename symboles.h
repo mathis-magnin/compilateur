@@ -102,8 +102,9 @@ union YYSTYPE
     n_fonction *fonction;
     n_l_parametres *l_parametres;
     n_parametre *parametre;
+    n_l_arguments *l_arguments;
 
-#line 107 "symboles.h"
+#line 108 "symboles.h"
 
 };
 typedef union YYSTYPE YYSTYPE;
